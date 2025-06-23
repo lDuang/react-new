@@ -5,6 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [site]
 bucket = ".vercel/output/static"
+
 main = "./.vercel/output/functions/[[path]].js"
 
 [pages]
