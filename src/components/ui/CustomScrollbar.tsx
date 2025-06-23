@@ -51,4 +51,6 @@ export const CustomScrollbar = () => {
       <button onClick={scrollToBottom} className="p-2 rounded-full hover:bg-accent/20 transition-colors">
         <ArrowDown className="w-6 h-6 text-accent" />
       </button>
- 
+    </motion.div>
+  );
+}; 
