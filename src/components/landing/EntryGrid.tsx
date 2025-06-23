@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import useSWRInfinite from 'swr/infinite';
-import { motion, Variants } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { motion/*, Variants*/ } from "framer-motion";
+// import { useRouter } from "next/navigation";
 import Link from "next/link";
+import React from "react";
 
 import { API_BASE_URL, fetcher } from "@/lib/api";
-import { Entry, PaginatedEntries } from "@/lib/types";
+import { Entry, PaginatedEntries } from "@/types";
 import { BookCard, BookCardData } from "@/components/cards/BookCard";
 import { MovieCard, MovieCardData } from "@/components/cards/MovieCard";
 import { LeetcodeCard, LeetcodeCardData } from "@/components/cards/LeetcodeCard";
@@ -18,18 +19,18 @@ const getKey = (pageIndex: number, previousPageData: PaginatedEntries | null) =>
   return `${API_BASE_URL}/api/entries/public?page=${pageIndex + 1}&limit=8`;
 };
 
-const cardVariants: Variants = {
-  initial: { opacity: 0, scale: 0.5, rotate: (Math.random() * 20 - 10) },
-  enter: (i: number) => ({
-    opacity: 1,
-    scale: 1,
-    transition: {
-      delay: i * 0.1,
-      duration: 0.5,
-      ease: [0.165, 0.84, 0.44, 1]
-    }
-  })
-};
+// const cardVariants: Variants = {
+//   initial: { opacity: 0, scale: 0.5, rotate: (Math.random() * 20 - 10) },
+//   enter: (i: number) => ({
+//     opacity: 1,
+//     scale: 1,
+//     transition: {
+//       delay: i * 0.1,
+//       duration: 0.5,
+//       ease: [0.165, 0.84, 0.44, 1]
+//     }
+//   })
+// };
 
 const renderCard = (entry: Entry) => {
   switch (entry.type) {
@@ -59,7 +60,7 @@ export function EntryGrid() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [cardPositions, setCardPositions] = useState<{ [id: string]: { x: number, y: number, rotate: number } }>({});
 
-  const entries: Entry[] = data ? data.flatMap(page => page.data) : [];
+  const entries: Entry[] = React.useMemo(() => (data ? data.flatMap(page => page.data) : []), [data]);
   const isLoadingMore = isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
   const isReachingEnd = (data && data[data.length - 1]?.data.length < 8);
 

@@ -1,9 +1,11 @@
+// path: src/app/login/page.tsx
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/features/auth/store';
 import { API_BASE_URL, fetcher } from '@/lib/api';
+// 移除了未使用的 Button 和 Input 导入
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -28,8 +30,9 @@ export default function LoginPage() {
       login();
       router.push('/'); // 登录成功后跳转到首页
 
-    } catch (err: any) {
-      setError(err?.info?.error || 'Login failed');
+    } catch (err) {
+      const error = err as Error & { info?: { error?: string } };
+      setError(error?.info?.error || 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +71,7 @@ export default function LoginPage() {
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div>
+            {/* 使用普通的 button 标签替代导入的 Button 组件 */}
             <button
               type="submit"
               disabled={isLoading}
@@ -80,4 +84,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}

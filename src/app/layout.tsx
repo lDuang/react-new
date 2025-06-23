@@ -4,7 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/landing/header";
 import { CustomScrollbar } from "@/components/ui/CustomScrollbar";
-import "./globals.css";
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "技点迷津 - 交互式首页",

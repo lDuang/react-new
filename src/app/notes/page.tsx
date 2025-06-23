@@ -1,14 +1,14 @@
 "use client";
 
+import React, { useEffect } from "react";
 import useSWR from 'swr';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/features/auth/store';
 import { fetcher, API_BASE_URL } from '@/lib/api';
-import { Entry } from '@/lib/types';
+import { Entry, PaginatedEntries } from '@/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 function NoteCard({ entry }: { entry: Entry }) {
     return (
@@ -28,22 +28,22 @@ function NoteCard({ entry }: { entry: Entry }) {
 }
 
 export default function NotesPage() {
-    const { token, isLoggedIn } = useAuthStore();
+    const { isLoggedIn } = useAuthStore();
     const router = useRouter();
 
     // 路由保护
     useEffect(() => {
-        if (!isLoggedIn()) {
+        if (!isLoggedIn) {
             router.replace('/login');
         }
     }, [isLoggedIn, router]);
 
-    const { data, error, isLoading } = useSWR(
-        token ? `${API_BASE_URL}/api/admin/entries` : null,
-        (url: string) => fetcher(url, { headers: { 'Authorization': `Bearer ${token}` } })
+    const { data, error, isLoading } = useSWR<PaginatedEntries>(
+        isLoggedIn ? `${API_BASE_URL}/api/admin/entries` : null,
+        fetcher
     );
 
-    if (!isLoggedIn()) {
+    if (!isLoggedIn) {
         return <p className="text-center pt-20">跳转到登录页面...</p>;
     }
     

@@ -3,11 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from 'react';
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from '@/features/auth/store';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useRouter } from "next/navigation";
-import { fetcher, API_BASE_URL } from "@/lib/api";
-
+import { fetcher, API_BASE_URL } from '@/lib/api';
 
 export function Header() {
   const { isLoggedIn, logout } = useAuthStore();
@@ -49,7 +48,7 @@ export function Header() {
         <nav className="hidden md:flex flex-1 justify-center items-center space-x-8 text-sub">
             <Link href="/" className="hover:text-main transition-colors">首页</Link>
             {isLoggedIn && (
-              <Link href="/records" className="hover:text-main transition-colors">手记</Link>
+              <Link href="/notes" className="hover:text-main transition-colors">手记</Link>
             )}
             <Link href="/projects" className="hover:text-main transition-colors">项目</Link>
         </nav>

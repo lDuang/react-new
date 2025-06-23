@@ -1,3 +1,4 @@
+// path: src/components/cards/LeetcodeCard.tsx
 import React from 'react';
 import { Code2 } from 'lucide-react';
 
@@ -6,6 +7,7 @@ interface LeetcodeSubmissionMeta {
   difficulty?: 'Easy' | 'Medium' | 'Hard';
   submission_url?: string;
   language?: string;
+  slug?: string;
 }
 
 export interface LeetcodeCardData {
@@ -40,7 +42,7 @@ export const LeetcodeCard: React.FC<LeetcodeCardProps> = ({ data }) => {
   const metaData: LeetcodeSubmissionMeta = React.useMemo(() => {
     try {
       return JSON.parse(data.meta || '{}');
-    } catch (e) {
+    } catch { // 直接移除未使用的 'e' 或 '_e'
       return {};
     }
   }, [data.meta]);
@@ -64,4 +66,4 @@ export const LeetcodeCard: React.FC<LeetcodeCardProps> = ({ data }) => {
       </div>
     </article>
   );
-}; 
+};

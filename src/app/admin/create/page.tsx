@@ -12,40 +12,47 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/features/auth/store";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { API_BASE_URL, fetcher } from "@/lib/api";
+import "easymde/dist/easymde.min.css";
 
 const ALLOWED_ENTRY_TYPES = [
   "BOOK_LOG",
   "MOVIE_LOG",
   "LEETCODE_SUBMISSION",
   "JOURNAL",
+  "THOUGHT"
 ];
+
+interface CreateEntryResponse {
+  success: boolean;
+  error?: string;
+}
 
 export default function CreateEntryPage() {
   const router = useRouter();
   const { isLoggedIn } = useAuthStore();
-  const [isMounted, setIsMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
   
   // 状态管理
-  const [type, setType] = useState("");
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [isPublic, setIsPublic] = useState(true);
-  const [meta, setMeta] = useState(""); // 简单起见，meta作为JSON字符串输入
-  const [tags, setTags] = useState(""); // 简单起见，tags作为逗号分隔的字符串输入
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [type, setType] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
+  const [content, setContent] = useState<string>("");
+  const [isPublic, setIsPublic] = useState<boolean>(true);
+  const [meta, setMeta] = useState<string>(""); // 简单起见，meta作为JSON字符串输入
+  const [tags, setTags] = useState<string>(""); // 简单起见，tags作为逗号分隔的字符串输入
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    if (isMounted && !isLoggedIn()) {
+    if (isMounted && !isLoggedIn) {
       router.replace("/login");
     }
   }, [isMounted, isLoggedIn, router]);
@@ -61,13 +68,16 @@ export default function CreateEntryPage() {
       if (meta) {
         try {
           parsedMeta = JSON.parse(meta);
-        } catch (e) {
+        } catch (parseError: unknown) {
+          if (parseError instanceof Error) {
+            throw new Error(`Meta 必须是合法的 JSON 格式。错误: ${parseError.message}`);
+          }
           throw new Error("Meta 必须是合法的 JSON 格式。");
         }
       }
-      const parsedTags = tags.split(",").map(t => t.trim()).filter(Boolean);
+      const parsedTags = tags.split(",").map((tagItem: string) => tagItem.trim()).filter(Boolean);
 
-      const data = await fetcher(`${API_BASE_URL}/api/admin/entries`, {
+      const data = await fetcher<CreateEntryResponse>(`${API_BASE_URL}/api/admin/entries`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,14 +99,18 @@ export default function CreateEntryPage() {
       // 创建成功，跳转到首页
       router.push("/");
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("一个未知的错误发生了。");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isMounted || !isLoggedIn()) {
+  if (!isMounted || !isLoggedIn) {
     return <p>加载中...</p>;
   }
 
@@ -114,19 +128,19 @@ export default function CreateEntryPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
               <Label htmlFor="title" className="text-lg font-medium">标题</Label>
-              <Input id="title" value={title} onChange={e => setTitle(e.target.value)} required 
+              <Input id="title" value={title} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} required 
                 className="py-6 text-lg" placeholder="给你的想法起个名字..." />
             </div>
             <div className="space-y-2">
               <Label htmlFor="type" className="text-lg font-medium">类型</Label>
-              <Select onValueChange={setType} required>
+              <Select onValueChange={(value: string) => setType(value)} required>
                 <SelectTrigger id="type" className="py-6 text-lg">
                   <SelectValue placeholder="选择一个分类" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ALLOWED_ENTRY_TYPES.map((type) => (
-                    <SelectItem key={type} value={type} className="text-lg">
-                      {type}
+                  {ALLOWED_ENTRY_TYPES.map((itemType: string) => (
+                    <SelectItem key={itemType} value={itemType} className="text-lg">
+                      {itemType}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -136,7 +150,7 @@ export default function CreateEntryPage() {
           
           <div className="space-y-2">
             <Label htmlFor="content" className="text-lg font-medium">内容 (支持 Markdown)</Label>
-            <Textarea id="content" value={content} onChange={e => setContent(e.target.value)} required 
+            <Textarea id="content" value={content} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)} required 
               rows={15} className="text-base leading-relaxed" placeholder="在这里开始书写..." />
           </div>
 
@@ -144,16 +158,16 @@ export default function CreateEntryPage() {
             <h3 className="text-xl font-semibold">元信息</h3>
              <div className="space-y-2">
               <Label htmlFor="meta">元数据 (JSON格式)</Label>
-              <Textarea id="meta" value={meta} onChange={e => setMeta(e.target.value)} rows={3} placeholder='{ "rating": 5, "author": "..." }' className="font-mono" />
+              <Textarea id="meta" value={meta} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMeta(e.target.value)} rows={3} placeholder='{ "rating": 5, "author": "..." }' className="font-mono" />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="tags">标签 (逗号分隔)</Label>
-              <Input id="tags" value={tags} onChange={e => setTags(e.target.value)} placeholder="技术, 读书笔记" />
+              <Input id="tags" value={tags} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTags(e.target.value)} placeholder="技术, 读书笔记" />
             </div>
 
             <div className="flex items-center space-x-3 pt-2">
-              <Checkbox id="is_public" checked={isPublic} onCheckedChange={(checked) => setIsPublic(checked === true)} className="w-5 h-5" />
+              <Checkbox id="is_public" checked={isPublic} onCheckedChange={(checked: boolean) => setIsPublic(checked)} className="w-5 h-5" />
               <Label htmlFor="is_public" className="text-base font-medium">将这篇手记设为公开</Label>
             </div>
           </div>

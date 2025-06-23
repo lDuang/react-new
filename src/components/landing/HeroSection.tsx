@@ -1,13 +1,12 @@
 "use client";
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Crystal } from './crystal';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/features/auth/store';
 import { useEffect, useState } from 'react';
 
-export function Hero() {
+export default function HeroSection() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   
   // 解决水合问题
@@ -34,7 +33,7 @@ export function Hero() {
     }
   };
 
-  const recordLink = hasMounted && isLoggedIn ? "/records/new" : "/login";
+  const recordLink = hasMounted && isLoggedIn ? "/admin/create" : "/login";
 
   return (
     <section id="hero-section" className="container grid lg:grid-cols-2 place-items-center min-h-screen -mt-16 py-20 md:py-32 gap-10">
@@ -84,4 +83,4 @@ export function Hero() {
       </div>
     </section>
   );
-} 
+}
