@@ -1,13 +1,13 @@
+// path: src/components/cards/BookCard.tsx
 import React from 'react';
 import { BookOpenText } from 'lucide-react';
-// import { Button } from "../ui/button";
 
-interface BookLogMeta {
-  author?: string;
-  cover_url?: string;
-  rating?: number;
-  url?: string;
-}
+// interface BookLogMeta { // BookLogMeta 不再被使用，已移除
+//   author?: string;
+//   cover_url?: string;
+//   rating?: number;
+//   url?: string;
+// }
 
 export interface BookCardData {
   id: string;
@@ -25,17 +25,18 @@ interface BookCardProps {
 }
 
 export const BookCard: React.FC<BookCardProps> = ({ data }) => {
-  const metaData: BookLogMeta = React.useMemo(() => {
-    try {
-      return JSON.parse(data.meta || '{}');
-    } catch (e) {
-      return {};
-    }
-  }, [data.meta]);
+  // metaData 不再被使用，已移除其计算逻辑
+  // const metaData: BookLogMeta = React.useMemo(() => {
+  //   try {
+  //     return JSON.parse(data.meta || '{}');
+  //   } catch (_e) { // 将未使用的 e 重命名为 _e
+  //     return {};
+  //   }
+  // }, [data.meta]);
 
   // const handleLinkClick = (/*e: React.MouseEvent*/) => {
-    // e.stopPropagation();
-    // window.open(data.meta.url, '_blank', 'noopener,noreferrer');
+  //   // e.stopPropagation();
+  //   // window.open(data.meta.url, '_blank', 'noopener,noreferrer');
   // };
 
   return (
@@ -52,4 +53,4 @@ export const BookCard: React.FC<BookCardProps> = ({ data }) => {
       </div>
     </article>
   );
-}; 
+};
