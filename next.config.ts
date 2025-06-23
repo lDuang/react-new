@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
     "https://qjczsa-vzpdmo-3000.app.cloudstudio.work", // 替换为您的实际域名
     // 如果有其他开发环境的域名，也可以添加
   ],
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, 'src'),
+    };
+    return config;
+  },
 };
 
 export default nextConfig;
