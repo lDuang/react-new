@@ -1,5 +1,6 @@
 // next.config.ts
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   // ... 其他配置，例如 reactStrictMode: true
@@ -9,10 +10,10 @@ const nextConfig: NextConfig = {
     "https://coderpath.me", // 替换为您的实际域名
     // 如果有其他开发环境的域名，也可以添加
   ],
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, 'src'),
     };
     return config;
   },
