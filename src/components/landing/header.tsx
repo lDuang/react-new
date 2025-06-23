@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/features/auth/store';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useRouter } from "next/navigation";
-import { fetcher, API_BASE_URL } from '@/lib/api';
+import { fetcher, API_BASE_URL } from '../../lib/api';
 
 export function Header() {
   const { isLoggedIn, logout } = useAuthStore();

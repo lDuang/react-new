@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import useSWR from 'swr';
 import { useAuthStore } from '@/features/auth/store';
-import { fetcher, API_BASE_URL } from '@/lib/api';
+import { fetcher, API_BASE_URL } from '../../lib/api';
 import { Entry, PaginatedEntries } from '@/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';

@@ -7,7 +7,7 @@ import { motion/*, Variants*/ } from "framer-motion";
 import Link from "next/link";
 import React from "react";
 
-import { API_BASE_URL, fetcher } from "@/lib/api";
+import { API_BASE_URL, fetcher } from "../../lib/api";
 import { Entry, PaginatedEntries } from "@/types";
 import { BookCard, BookCardData } from "@/components/cards/BookCard";
 import { MovieCard, MovieCardData } from "@/components/cards/MovieCard";
