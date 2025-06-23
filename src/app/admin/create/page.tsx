@@ -16,7 +16,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { API_BASE_URL, fetcher } from "../../../lib/api";
+import { API_BASE_URL, fetcher } from "@/lib/api";
 import "easymde/dist/easymde.min.css";
 
 const ALLOWED_ENTRY_TYPES = [
