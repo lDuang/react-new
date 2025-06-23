@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev",
-    "build": "next build && npx @cloudflare/next-on-pages --skip-build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
