@@ -1,3 +1,4 @@
 name = "react-new"
 compatibility_date = "2024-05-08"
+compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static" 
