@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技点迷津 - 交互式首页原型 v2.5</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            /* "宇宙拿铁" 配色方案 */
+            --bg-light: #F5F5F3;
+            --card-bg-light: #FFFFFF;
+            --text-main-light: #1D2C3B;
+            --text-sub-light: #5A6A79;
+            --accent-light: #003153;
+            --accent-glow-light: rgba(0, 49, 83, 0.3);
+
+            --bg-dark: #191A23;
+            --card-bg-dark: #222430;
+            --text-main-dark: #EAEAEA;
+            --text-sub-dark: #A0AEC0;
+            --accent-dark: #C678DD;
+            --accent-glow-dark: rgba(198, 120, 221, 0.4);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            background-color: var(--bg-light);
+            color: var(--text-main-light);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .dark body {
+            background-color: var(--bg-dark);
+            color: var(--text-main-dark);
+        }
+        .dark .bg-deep-space {
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* 统一的颜色变量应用 */
+        .bg-card { background-color: var(--card-bg-light); }
+        .dark .bg-card { background-color: var(--card-bg-dark); }
+        .text-main { color: var(--text-main-light); }
+        .dark .text-main { color: var(--text-main-dark); }
+        .text-sub { color: var(--text-sub-light); }
+        .dark .text-sub { color: var(--text-sub-dark); }
+        .text-accent { color: var(--accent-light); }
+        .dark .text-accent { color: var(--accent-dark); }
+        .bg-accent { background-color: var(--accent-light); }
+        .dark .bg-accent { background-color: var(--accent-dark); }
+        .border-accent { border-color: var(--accent-light); }
+        .dark .border-accent { border-color: var(--accent-dark); }
+        .accent-glow { box-shadow: 0 0 15px var(--accent-glow-light); }
+        .dark .accent-glow { box-shadow: 0 0 20px var(--accent-glow-dark); }
+
+        /* "思想晶体" 3D动效 */
+        .crystal-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            perspective: 2000px;
+        }
+        .crystal {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+        .crystal-face {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            border: 1px solid var(--accent-dark);
+            background: radial-gradient(circle, rgba(198, 120, 221, 0.1) 0%, rgba(198, 120, 221, 0) 60%);
+            border-radius: 12px;
+        }
+        .light .crystal-face {
+             border-color: var(--accent-light);
+             background: radial-gradient(circle, rgba(0, 49, 83, 0.1) 0%, rgba(0, 49, 83, 0) 60%);
+        }
+
+        .face-front  { transform: rotateY(  0deg) translateZ(125px); }
+        .face-back   { transform: rotateY(180deg) translateZ(125px); }
+        .face-right  { transform: rotateY( 90deg) translateZ(125px); }
+        .face-left   { transform: rotateY(-90deg) translateZ(125px); }
+        .face-top    { transform: rotateX( 90deg) translateZ(125px); }
+        .face-bottom { transform: rotateX(-90deg) translateZ(125px); }
+
+        /* 滚动出现动画(带模糊) */
+        .scroll-animate {
+            opacity: 0;
+            filter: blur(5px);
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                        transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1),
+                        filter 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .scroll-animate.is-visible {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+        }
+
+        /* SVG S型时间线 */
+        .timeline-svg-path {
+            stroke-dasharray: 1; 
+            stroke-dashoffset: 1;
+        }
+        
+        /* 时间滑块的显隐效果 */
+        #time-slider {
+            opacity: 0;
+            transform: translateX(100%);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            pointer-events: none;
+        }
+        #time-slider.is-visible {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+        
+        /* 卡片点击效果 */
+        .timeline-card-link {
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .timeline-card-link:hover {
+            transform: scale(1.02);
+        }
+        
+        .dark { color-scheme: dark; }
+    </style>
+</head>
+<body class="bg-deep-space">
+
+    <!-- 时间滑块 -->
+    <div id="time-slider" class="fixed right-0 top-0 h-full w-20 md:w-24 z-40 flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center h-2/3 relative pointer-events-none">
+             <button id="go-to-present" class="text-accent mb-2 pointer-events-auto cursor-pointer" title="回到现在"><i data-lucide="chevrons-up"></i></button>
+            <span class="text-xs text-accent font-bold tracking-widest uppercase">当前</span>
+            <div id="time-slider-track" class="w-0.5 h-full bg-accent/20 rounded-full my-4 relative">
+                <div id="time-slider-thumb" class="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-accent rounded-full accent-glow">
+                    <div id="time-slider-tooltip" class="absolute right-full mr-4 w-auto max-w-[200px] truncate whitespace-nowrap px-3 py-1 bg-card rounded-lg text-sm text-sub shadow-lg opacity-0 transition-opacity"></div>
+                </div>
+            </div>
+            <span class="text-xs text-accent/50 font-bold tracking-widest uppercase">梦的开始</span>
+            <button id="go-to-dream" class="text-accent/50 mt-2 pointer-events-auto cursor-pointer" title="前往开端"><i data-lucide="chevrons-down"></i></button>
+        </div>
+    </div>
+
+
+    <!-- 升级: 顶部导航栏 -->
+    <header class="sticky top-0 z-50 p-4 backdrop-blur-lg border-b border-black/5 dark:border-white/5 bg-card/60">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Left: Title -->
+            <div class="flex-1">
+                 <h1 class="text-xl font-bold tracking-wider text-main">技点迷津</h1>
+            </div>
+            <!-- Center: Nav -->
+            <nav class="hidden md:flex flex-1 justify-center items-center space-x-8 text-sub">
+                <a href="#" class="hover:text-main transition-colors">首页</a>
+                <a href="#" class="hover:text-main transition-colors">手记</a>
+                <a href="#" class="hover:text-main transition-colors">项目</a>
+            </nav>
+            <!-- Right: Theme Toggle -->
+            <div class="flex-1 flex justify-end">
+                <button id="theme-toggle" class="p-2 rounded-full text-sub hover:text-main hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                    <i data-lucide="sun" class="block dark:hidden"></i>
+                    <i data-lucide="moon" class="hidden dark:block"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <!-- 首屏 Hero Section -->
+        <section id="hero-section" class="relative min-h-[90vh] flex flex-col md:flex-row items-center justify-center py-20">
+
+            <div class="w-full md:w-1/2 space-y-6 text-center md:text-left">
+                <h2 class="text-5xl md:text-7xl font-black tracking-tight text-main scroll-animate is-visible">技点迷津</h2>
+                <p class="text-xl md:text-2xl text-sub scroll-animate is-visible" style="transition-delay: 100ms;">一个用代码与文字耕耘思想的数字花园。</p>
+                <!-- 升级: 按钮布局 -->
+                <div class="pt-4 scroll-animate is-visible" style="transition-delay: 200ms;">
+                    <div class="flex flex-col sm:flex-row gap-4 items-center justify-center md:justify-start">
+                        <a href="#timeline-section" class="inline-block w-full sm:w-auto text-center bg-accent text-white font-bold py-3 px-8 rounded-full text-lg hover:brightness-110 transition-all duration-300 hover:scale-105">探索足迹</a>
+                        <a href="#" class="inline-block w-full sm:w-auto text-center text-accent border-2 border-accent font-semibold py-3 px-8 rounded-full text-lg hover:bg-accent/10 transition-colors">记录一下</a>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full md:w-1/2 flex items-center justify-center mt-12 md:mt-0">
+                <!-- 思想晶体 -->
+                <div id="crystal-container" class="crystal-container">
+                    <div id="crystal" class="crystal">
+                        <div class="crystal-face face-front"></div>
+                        <div class="crystal-face face-back"></div>
+                        <div class="crystal-face face-right"></div>
+                        <div class="crystal-face face-left"></div>
+                        <div class="crystal-face face-top"></div>
+                        <div class="crystal-face face-bottom"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- S型成长时间线 -->
+        <section id="timeline-section" class="py-20">
+            <div class="scroll-animate">
+                 <h3 class="text-3xl font-bold text-center mb-20 text-main">近期成长</h3>
+            </div>
+            <div id="timeline-container" class="relative w-full max-w-4xl mx-auto">
+                <div id="svg-container" class="absolute top-0 left-0 w-full h-full pointer-events-none">
+                    <svg class="w-full h-full" viewBox="0 0 400 1600" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path class="timeline-svg-path" d="M200 0 V 100 C 200,200 350,200 350,300 S 200,400 200,500 S 50,600 50,700 S 200,800 200,900 S 350,1000 350,1100 S 200,1200 200,1300 S 50,1400 50,1500 S 200,1600 200,1600" stroke="var(--accent-dark)" stroke-opacity="0.3" stroke-width="2"/>
+                    </svg>
+                </div>
+                <!-- 卡片容器 -->
+                <div id="timeline-nodes-container" class="min-h-[1200px] relative">
+                    <!-- 初始卡片 -->
+                    <div class="timeline-node absolute w-2/5 left-[55%] top-[15%] scroll-animate" data-title="阅读《三体》">
+                        <a href="#" class="timeline-card-link">
+                            <div class="bg-card ring-1 ring-black/5 dark:ring-white/10 rounded-2xl shadow-xl p-6 border-t-2 border-accent">
+                                <p class="mb-3 text-sm text-sub">2025年6月18日</p>
+                                <h4 class="font-bold text-lg mb-2 text-main">阅读《三体》</h4>
+                                <p class="text-sub font-light">宇宙很大，生活更大。</p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="timeline-node absolute w-2/5 right-[55%] top-[30%] scroll-animate text-right" data-title="LeetCode 两数之和">
+                         <a href="#" class="timeline-card-link">
+                            <div class="inline-block text-left bg-card ring-1 ring-black/5 dark:ring-white/10 rounded-2xl shadow-xl p-6 border-t-2 border-accent">
+                                <p class="mb-3 text-sm text-sub">2025年6月17日</p>
+                                <h4 class="font-bold text-lg mb-2 text-main">完成 LeetCode "两数之和"</h4>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="timeline-node absolute w-2/5 left-[55%] top-[45%] scroll-animate" data-title="观看《星际穿越》">
+                        <a href="#" class="timeline-card-link">
+                            <div class="bg-card ring-1 ring-black/5 dark:ring-white/10 rounded-2xl shadow-xl p-6 border-t-2 border-accent">
+                                <p class="mb-3 text-sm text-sub">2025年6月16日</p>
+                                <h4 class="font-bold text-lg mb-2 text-main">观看《星际穿越》</h4>
+                                <p class="text-sub font-light">爱是唯一可以超越时间与空间维度的东西。</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                 <!-- 无限滚动触发器 -->
+                <div id="infinite-scroll-trigger" class="h-60"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-12 text-center text-sub text-sm">
+        <p>&copy; 2024 [你的名字] - 技点迷津</p>
+        <p class="mt-2">Built with passion and code.</p>
+    </footer>
+    
+    <script>
+        // 初始化 Lucide Icons
+        lucide.createIcons();
+
+        // --- 主题切换 ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const docElement = document.documentElement;
+        themeToggle.addEventListener('click', () => {
+            docElement.classList.toggle('dark');
+            localStorage.setItem('theme', docElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            docElement.classList.add('dark');
+        } else {
+            docElement.classList.remove('dark');
+        }
+
+        // --- "思想晶体"交互 ---
+        const crystalContainer = document.getElementById('crystal-container');
+        const crystal = document.getElementById('crystal');
+        let isHoveringCrystal = false;
+        let rotX = 0, rotY = 0;
+        let targetRotX = 0, targetRotY = 0;
+        
+        function animateCrystal() {
+            if (isHoveringCrystal) {
+                rotX += (targetRotX - rotX) * 0.1;
+                rotY += (targetRotY - rotY) * 0.1;
+            } else {
+                rotY += 0.1; 
+                rotX += 0.05;
+            }
+            crystal.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            requestAnimationFrame(animateCrystal);
+        }
+        animateCrystal();
+
+        crystalContainer.addEventListener('mouseenter', () => isHoveringCrystal = true);
+        crystalContainer.addEventListener('mousemove', (e) => {
+            if (!isHoveringCrystal) return;
+            const rect = crystalContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            targetRotY = rotY + (x / rect.width - 0.5) * 50;
+            targetRotX = rotX + (y / rect.height - 0.5) * -50;
+        });
+        crystalContainer.addEventListener('mouseleave', () => isHoveringCrystal = false);
+        
+        // --- 滚动出现动画 (可重复) ---
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                entry.target.classList.toggle('is-visible', entry.isIntersecting);
+            });
+        }, { threshold: 0.2, rootMargin: "0px 0px -50px 0px" });
+        document.querySelectorAll('.scroll-animate').forEach(el => scrollObserver.observe(el));
+        
+        // --- 无限滚动 ---
+        let cardsToLoad = [
+            { side: 'right', top: '60%', title: "启动 '技点迷津' 项目", date: '2025年6月15日' },
+            { side: 'left', top: '75%', title: "关于前端框架的思考", date: '2025年6月14日' },
+            { side: 'right', top: '90%', title: "学习 Three.js", date: '2025年6月13日' }
+        ];
+        const cardHeight = 250; 
+
+        const infiniteScrollTrigger = document.getElementById('infinite-scroll-trigger');
+        const loadMoreObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && cardsToLoad.length > 0) {
+                addMoreCards();
+            }
+        }, { threshold: 0.1 });
+        if(infiniteScrollTrigger) loadMoreObserver.observe(infiniteScrollTrigger);
+        
+        function addMoreCards() {
+            const container = document.getElementById('timeline-nodes-container');
+            const data = cardsToLoad.shift();
+            if(!data) {
+                if(infiniteScrollTrigger) infiniteScrollTrigger.style.display = 'none';
+                return;
+            };
+
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = `timeline-node absolute w-2/5 top-[${data.top}] scroll-animate ${data.side === 'right' ? 'right-[55%] text-right' : 'left-[55%]'}`;
+            cardWrapper.dataset.title = data.title;
+            cardWrapper.innerHTML = `
+                <a href="#" class="timeline-card-link">
+                    <div class="inline-block text-left bg-card ring-1 ring-black/5 dark:ring-white/10 rounded-2xl shadow-xl p-6 border-t-2 border-accent">
+                        <p class="mb-3 text-sm text-sub">${data.date}</p>
+                        <h4 class="font-bold text-lg mb-2 text-main">${data.title}</h4>
+                    </div>
+                </a>
+            `;
+            container.appendChild(cardWrapper);
+            scrollObserver.observe(cardWrapper);
+            
+            const containerMinHeight = parseFloat(container.style.minHeight) || 1200;
+            const newHeight = containerMinHeight + cardHeight;
+            container.style.minHeight = `${newHeight}px`;
+            
+            const svgContainer = document.getElementById('svg-container');
+            const svgElement = svgContainer.querySelector('svg');
+            const pathElement = svgContainer.querySelector('path');
+            
+            svgElement.setAttribute('viewBox', `0 0 400 ${newHeight}`);
+            const oldD = pathElement.getAttribute('d');
+            const lastPointIndex = oldD.lastIndexOf('S');
+            const newD = oldD.substring(0, lastPointIndex) + `S 200,${newHeight} 200,${newHeight}`;
+            pathElement.setAttribute('d', newD);
+            setupTimeline();
+        }
+
+        // --- SVG路径与时间滑块 ---
+        const svgPath = document.querySelector('.timeline-svg-path');
+        const timeSlider = document.getElementById('time-slider');
+        const sliderThumb = document.getElementById('time-slider-thumb');
+        const sliderTooltip = document.getElementById('time-slider-tooltip');
+        let pathLength = 0;
+        let isDragging = false;
+        let currentTooltipText = '';
+        
+        function setupTimeline() {
+            if (svgPath) {
+                pathLength = svgPath.getTotalLength();
+                svgPath.style.strokeDasharray = pathLength;
+                svgPath.style.strokeDashoffset = pathLength;
+            }
+        }
+
+        function updateElementsOnScroll() {
+            const timelineSection = document.getElementById('timeline-section');
+            if (!timelineSection) return;
+            
+            const timelineNodes = document.querySelectorAll('.timeline-node');
+            const scrollY = window.scrollY;
+            const viewportHeight = window.innerHeight;
+            
+            const timelineStart = timelineSection.offsetTop;
+            const timelineEnd = timelineSection.offsetTop + timelineSection.offsetHeight;
+            const timelineScrollable = timelineEnd - timelineStart;
+            const timelineScrolled = scrollY + viewportHeight * 0.5 - timelineStart;
+            let timelineProgress = timelineScrolled / timelineScrollable;
+            timelineProgress = Math.max(0, Math.min(1, timelineProgress));
+            
+            if (svgPath) svgPath.style.strokeDashoffset = pathLength * (1 - timelineProgress);
+
+            if (sliderThumb) {
+                const thumbTrack = sliderThumb.parentElement;
+                const trackHeight = thumbTrack.clientHeight;
+                sliderThumb.style.top = `${timelineProgress * trackHeight}px`;
+            }
+
+            let activeNodeTitle = '';
+            timelineNodes.forEach(node => {
+                const nodeRect = node.getBoundingClientRect();
+                if (nodeRect.top > viewportHeight * 0.4 && nodeRect.top < viewportHeight * 0.6) {
+                    activeNodeTitle = node.dataset.title;
+                }
+            });
+            
+            if (activeNodeTitle && activeNodeTitle !== currentTooltipText) {
+                sliderTooltip.textContent = activeNodeTitle;
+                sliderTooltip.style.opacity = '1';
+                currentTooltipText = activeNodeTitle;
+            } else if (!activeNodeTitle && currentTooltipText !== '') {
+                 sliderTooltip.style.opacity = '0';
+                 currentTooltipText = '';
+            }
+        }
+        
+        const timelineSectionForSlider = document.getElementById('timeline-section');
+        const sliderObserver = new IntersectionObserver((entries) => {
+            timeSlider.classList.toggle('is-visible', entries[0].isIntersecting);
+        }, { threshold: 0.01, rootMargin: "0px 0px -200px 0px" });
+        if (timelineSectionForSlider) sliderObserver.observe(timelineSectionForSlider);
+        
+        
+        document.getElementById('go-to-present').addEventListener('click', () => {
+             timelineSectionForSlider.scrollIntoView();
+        });
+        document.getElementById('go-to-dream').addEventListener('click', () => {
+            window.scrollTo(0, document.documentElement.scrollHeight);
+        });
+        
+        window.addEventListener('DOMContentLoaded', setupTimeline);
+        window.addEventListener('scroll', updateElementsOnScroll);
+        window.addEventListener('resize', setupTimeline);
+    </script>
+</body>
+</html>
