@@ -22,6 +22,7 @@ old/
 # 依赖管理文件
 pnpm-lock.yaml
 package-lock.json
+package-manager.json
 # -----------------------------------------------------------------------------
 
 # npm 缓存和日志
