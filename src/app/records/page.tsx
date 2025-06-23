@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 
 // This will be the page to show all records for a logged in user.
 // For now it's a placeholder.

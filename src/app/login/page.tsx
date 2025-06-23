@@ -2,8 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
-import { API_BASE_URL, fetcher } from '@/lib/api';
+import { useAuthStore } from '../../stores/authStore';
+import { API_BASE_URL, fetcher } from '../../lib/api';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');

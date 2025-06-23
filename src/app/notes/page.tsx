@@ -1,14 +1,14 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import useSWR from 'swr';
-import { useAuthStore } from '@/stores/authStore';
-import { fetcher, API_BASE_URL } from '@/lib/api';
-import { Entry } from '@/lib/types';
+import { useAuthStore } from '../../stores/authStore';
+import { fetcher, API_BASE_URL } from '../../lib/api';
+import { Entry } from '../../lib/types';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 function NoteCard({ entry }: { entry: Entry }) {
     return (

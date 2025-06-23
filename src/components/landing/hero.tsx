@@ -1,13 +1,13 @@
 "use client";
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/button';
 import { motion } from 'framer-motion';
 import { Crystal } from './crystal';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 import { useEffect, useState } from 'react';
 
-export function Hero() {
+export default function HeroSection() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   
   // 解决水合问题
