@@ -1,10 +1,12 @@
 import React from 'react';
 import { BookOpenText } from 'lucide-react';
+// import { Button } from "../ui/button";
 
 interface BookLogMeta {
   author?: string;
   cover_url?: string;
   rating?: number;
+  url?: string;
 }
 
 export interface BookCardData {
@@ -30,6 +32,11 @@ export const BookCard: React.FC<BookCardProps> = ({ data }) => {
       return {};
     }
   }, [data.meta]);
+
+  // const handleLinkClick = (/*e: React.MouseEvent*/) => {
+    // e.stopPropagation();
+    // window.open(data.meta.url, '_blank', 'noopener,noreferrer');
+  // };
 
   return (
     <article className="space-y-3">

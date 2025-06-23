@@ -12,11 +12,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/features/auth/store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { API_BASE_URL, fetcher } from "@/lib/api";
+import "easymde/dist/easymde.min.css";
 
 const ALLOWED_ENTRY_TYPES = [
   "BOOK_LOG",
@@ -24,6 +25,11 @@ const ALLOWED_ENTRY_TYPES = [
   "LEETCODE_SUBMISSION",
   "JOURNAL",
 ];
+
+interface CreateEntryResponse {
+  success: boolean;
+  error?: string;
+}
 
 export default function CreateEntryPage() {
   const router = useRouter();
@@ -45,7 +51,7 @@ export default function CreateEntryPage() {
   }, []);
 
   useEffect(() => {
-    if (isMounted && !isLoggedIn()) {
+    if (isMounted && !isLoggedIn) {
       router.replace("/login");
     }
   }, [isMounted, isLoggedIn, router]);
@@ -67,7 +73,7 @@ export default function CreateEntryPage() {
       }
       const parsedTags = tags.split(",").map(t => t.trim()).filter(Boolean);
 
-      const data = await fetcher(`${API_BASE_URL}/api/admin/entries`, {
+      const data = await fetcher<CreateEntryResponse>(`${API_BASE_URL}/api/admin/entries`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,14 +95,18 @@ export default function CreateEntryPage() {
       // 创建成功，跳转到首页
       router.push("/");
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("一个未知的错误发生了。");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isMounted || !isLoggedIn()) {
+  if (!isMounted || !isLoggedIn) {
     return <p>加载中...</p>;
   }
 

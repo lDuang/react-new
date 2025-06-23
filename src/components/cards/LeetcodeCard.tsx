@@ -6,6 +6,7 @@ interface LeetcodeSubmissionMeta {
   difficulty?: 'Easy' | 'Medium' | 'Hard';
   submission_url?: string;
   language?: string;
+  slug?: string;
 }
 
 export interface LeetcodeCardData {
