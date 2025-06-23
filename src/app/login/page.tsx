@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/features/auth/store';
-import { API_BASE_URL, fetcher } from '@/lib/api';
+import { API_BASE_URL, fetcher } from '../../lib/api';
 // 移除了未使用的 Button 和 Input 导入
 
 export default function LoginPage() {
