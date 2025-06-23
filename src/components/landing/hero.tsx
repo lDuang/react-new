@@ -1,10 +1,10 @@
 "use client";
 
 import Link from 'next/link';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Crystal } from './crystal';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useEffect, useState } from 'react';
 
 export default function HeroSection() {

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../../stores/authStore';
-import { API_BASE_URL, fetcher } from '../../../lib/api';
+import { useAuthStore } from '@/stores/authStore';
+import { API_BASE_URL, fetcher } from '@/lib/api';
 
 const ALLOWED_ENTRY_TYPES = ['BOOK_LOG', 'MOVIE_LOG', 'LEETCODE_SUBMISSION', 'JOURNAL'];
 

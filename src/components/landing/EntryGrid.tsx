@@ -6,12 +6,12 @@ import { motion, Variants } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { API_BASE_URL, fetcher } from "../../lib/api";
-import { Entry, PaginatedEntries } from "../../lib/types";
-import { BookCard, BookCardData } from "../cards/BookCard";
-import { MovieCard, MovieCardData } from "../cards/MovieCard";
-import { LeetcodeCard, LeetcodeCardData } from "../cards/LeetcodeCard";
-import { DefaultCard, DefaultCardData } from "../cards/DefaultCard";
+import { API_BASE_URL, fetcher } from "@/lib/api";
+import { Entry, PaginatedEntries } from "@/lib/types";
+import { BookCard, BookCardData } from "@/components/cards/BookCard";
+import { MovieCard, MovieCardData } from "@/components/cards/MovieCard";
+import { LeetcodeCard, LeetcodeCardData } from "@/components/cards/LeetcodeCard";
+import { DefaultCard, DefaultCardData } from "@/components/cards/DefaultCard";
 
 const getKey = (pageIndex: number, previousPageData: PaginatedEntries | null) => {
   if (previousPageData && !previousPageData.data.length) return null;

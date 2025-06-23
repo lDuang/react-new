@@ -1,22 +1,22 @@
 "use client";
 
-import { Button } from "../../../components/ui/button";
-import { Checkbox } from "../../../components/ui/checkbox";
-import { Input } from "../../../components/ui/input";
-import { Label } from "../../../components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../components/ui/select";
-import { Textarea } from "../../../components/ui/textarea";
-import { useAuthStore } from "../../../stores/authStore";
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { API_BASE_URL, fetcher } from "../../../lib/api";
+import { API_BASE_URL, fetcher } from "@/lib/api";
 
 const ALLOWED_ENTRY_TYPES = [
   "BOOK_LOG",

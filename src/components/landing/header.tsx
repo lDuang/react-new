@@ -3,11 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from 'react';
-import { useAuthStore } from "../../stores/authStore";
-import { ThemeToggle } from '../ui/ThemeToggle';
+import { useAuthStore } from '@/stores/authStore';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useRouter } from "next/navigation";
-import { fetcher, API_BASE_URL } from "../../lib/api";
-import { Button } from '../ui/button';
+import { fetcher, API_BASE_URL } from '@/lib/api';
+import { Button } from '@/components/ui/button';
 import { Crystal } from './crystal';
 
 
