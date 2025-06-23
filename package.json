@@ -29,6 +29,7 @@
     "lucide-react": "^0.383.0"
   },
   "devDependencies": {
+    "tailwindcss-animate": "^1.0.7",
     "@cloudflare/next-on-pages": "^1",
     "eslint-plugin-next-on-pages": "^1",
     "typescript": "^5",
