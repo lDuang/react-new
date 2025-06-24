@@ -25,22 +25,22 @@ export async function fetcher<JSON>(url: string, options: RequestInit = {}): Pro
     if (res.status === 401 && isProtectedRoute) {
       logout();
       if (typeof window !== 'undefined') {
-         if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-         }
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
 
     const customError = new Error('An error occurred while fetching the data.') as Error & {
-        info: Record<string, unknown>,
-        status: number
+      info: Record<string, unknown>,
+      status: number
     };
     try {
-        customError.info = await res.json();
+      customError.info = await res.json();
     } catch { // 将 catch 块的参数改为 _e
-        // 这里的 _e 是捕获到的错误，我们不直接使用它来设置 customError.info
-        // 使用 _e 告诉 ESLint 这是有意未使用的变量
-        customError.info = { message: await res.text() };
+      // 这里的 _e 是捕获到的错误，我们不直接使用它来设置 customError.info
+      // 使用 _e 告诉 ESLint 这是有意未使用的变量
+      customError.info = { message: await res.text() };
     }
     customError.status = res.status;
     throw customError; // 抛出我们自定义的错误对象
@@ -50,5 +50,5 @@ export async function fetcher<JSON>(url: string, options: RequestInit = {}): Pro
 }
 
 export const getPublicEntries = (page = 1, limit = 5): Promise<PaginatedEntries> => {
-    return fetcher(`${API_BASE_URL}/api/entries/public?page=${page}&limit=${limit}`);
+  return fetcher(`${API_BASE_URL}/api/entries/public?page=${page}&limit=${limit}`);
 }
