@@ -4,7 +4,7 @@ import { PaginatedEntries } from '../types';
 
 // 优先使用服务器端环境变量，如果不存在（例如在浏览器中），则回退到 NEXT_PUBLIC_ 变量
 // 这样在服务器端渲染和 API 路由中会使用更安全的服务器端变量
-export const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL! || '';
+export const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL! || 'https://api.coderpath.dev';
 
 export async function fetcher<JSON>(url: string, options: RequestInit = {}): Promise<JSON> {
   const { logout } = useAuthStore.getState();
