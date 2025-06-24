@@ -6,7 +6,9 @@
 node_modules
 
 # Next.js 构建输出目录
+.vercel
 .next/
+.open-next/
 out/ # 如果你使用 `next export` 导出静态站点
 
 # 生产环境构建输出（如果与 .next/ 不同）
@@ -16,11 +18,13 @@ build/
 dist/
 es/
 lib/
+old/
 
 # -----------------------------------------------------------------------------
 # 依赖管理文件
 pnpm-lock.yaml
 package-lock.json
+package-manager.json
 # -----------------------------------------------------------------------------
 
 # npm 缓存和日志
