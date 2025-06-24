@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/landing/header";
 import { CustomScrollbar } from "@/components/ui/CustomScrollbar";
+import AuthInitializer from "@/features/auth/components/AuthInitializer";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -25,9 +26,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          <main>{children}</main>
-          <CustomScrollbar />
+          <AuthInitializer>
+            <Header />
+            <main>{children}</main>
+            <CustomScrollbar />
+          </AuthInitializer>
         </ThemeProvider>
       </body>
     </html>
