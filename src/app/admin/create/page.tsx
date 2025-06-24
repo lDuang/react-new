@@ -34,7 +34,8 @@ interface CreateEntryResponse {
 
 export default function CreateEntryPage() {
   const router = useRouter();
-  const { isLoggedIn } = useAuthStore();
+  const { user } = useAuthStore();
+  const isLoggedIn = user !== null; // 从 user 对象派生出登录状态
   const [isMounted, setIsMounted] = useState<boolean>(false);
   
   // 状态管理
