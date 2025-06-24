@@ -10,4 +10,4 @@ directory = ".open-next/assets"
 binding = "ASSETS"
 
 [vars]
-API_BASE_URL = "https://api.coderpath.dev" 
+NEXT_PUBLIC_API_BASE_URL = "https://api.coderpath.dev" 
