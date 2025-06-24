@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { fetcher, API_BASE_URL } from '@/lib/api';
 
 export function Header() {
-  const { isLoggedIn, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const isLoggedIn = user !== null;
   const router = useRouter();
 
   // 解决 Zustand 在 Next.js App Router 中的水合问题

@@ -28,7 +28,8 @@ function NoteCard({ entry }: { entry: Entry }) {
 }
 
 export default function NotesPage() {
-    const { isLoggedIn } = useAuthStore();
+    const { user } = useAuthStore();
+    const isLoggedIn = user !== null;
     const router = useRouter();
 
     // 路由保护

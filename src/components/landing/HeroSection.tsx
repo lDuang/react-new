@@ -7,7 +7,8 @@ import { useAuthStore } from '@/features/auth/store';
 import { useEffect, useState } from 'react';
 
 export default function HeroSection() {
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const user = useAuthStore((state) => state.user);
+  const isLoggedIn = user !== null;
   
   // 解决水合问题
   const [hasMounted, setHasMounted] = useState(false);
