@@ -21,13 +21,22 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // 第一步：调用登录接口，后端会设置 httpOnly cookie
       await fetcher(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
-      login();
+      // 第二步：登录成功后，立即调用会话接口获取用户信息
+      const sessionData = await fetcher<any>(`${API_BASE_URL}/api/admin/auth/session`);
+
+      if (!sessionData || !sessionData.success) {
+        throw new Error("登录成功，但无法获取会话信息。");
+      }
+
+      // 第三步：用获取到的用户信息更新前端状态
+      login(sessionData.user);
       router.push('/'); // 登录成功后跳转到首页
 
     } catch (err) {
