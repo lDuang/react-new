@@ -55,6 +55,7 @@ pnpm-debug.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.dev.vars
 
 # -----------------------------------------------------------------------------
 # IDE 和编辑器特定文件
