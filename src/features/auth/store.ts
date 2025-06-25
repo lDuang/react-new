@@ -1,18 +1,63 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { api } from '@/lib/api';
 
-type User = {
+export interface User {
   id: string;
-  role: string;
+  username: string;
+  avatar?: string;
+}
+
+export type AuthCredentials = {
+  username?: string;
+  password?: string;
 };
 
-type AuthState = {
+export type AuthState = {
   user: User | null;
-  login: (user: User) => void;
-  logout: () => void;
-};
+}
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  login: (user) => set({ user }),
-  logout: () => set({ user: null }),
-})); 
+interface AuthStoreState {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  login: (credentials: AuthCredentials) => Promise<void>;
+  logout: () => void;
+  checkSession: () => Promise<void>;
+}
+
+export const useAuthStore = create<AuthStoreState>()(
+  persist(
+    (set) => ({
+      user: null,
+      setUser: (user) => set({ user }),
+      login: async (credentials) => {
+        const response = await api.auth.login(credentials);
+        if (response.data?.user) {
+          set({ user: response.data.user });
+        }
+      },
+      logout: () => {
+        set({ user: null });
+        // Optionally, we can also call a backend logout endpoint here
+        // if it exists, to invalidate the session/cookie on the server.
+      },
+      checkSession: async () => {
+        try {
+          const response = await api.auth.getSession();
+          if (response.data?.user) {
+            set({ user: response.data.user });
+          } else {
+            set({ user: null });
+          }
+        } catch (error) {
+          console.error("Session check failed, logging out.", error);
+          set({ user: null });
+        }
+      },
+    }),
+    {
+      name: 'auth-storage', // name of the item in the storage (must be unique)
+      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+    }
+  )
+); 

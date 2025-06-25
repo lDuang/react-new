@@ -13,19 +13,27 @@ import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { Entry } from "@/types";
-import { ENTRY_TYPES, FrontendEntryType, BackendEntryType, FormField } from "@/config/entryTypes";
+import { ENTRY_TYPES, FrontendEntryType, BackendEntryType, FormField, FIELD_LABELS } from "@/config/entryTypes";
 import { TagInput } from '@/components/ui/TagInput';
 
 // Helper function to find the frontend type based on the backend type
-// This is necessary because the API returns 'BLOG_POST' or 'NOTE', and we need to map it back
-// to a more specific frontend type like 'BOOK_LOG' or 'MOVIE_LOG'.
-// This logic assumes a simple mapping. If it gets complex, it should be refined.
-const getFrontendTypeFromBackend = (backendType: BackendEntryType): FrontendEntryType | undefined => {
-    // This is a simple reverse lookup. 
-    // It will return the *first* match. If backend types are not unique, this may need adjustment.
+// This includes a heuristic for legacy 'BLOG_POST' entries to differentiate them.
+const getFrontendTypeFromBackend = (entry: Entry): FrontendEntryType | undefined => {
+    const backendType = entry.type as BackendEntryType;
+
+    // Smart routing for legacy BLOG_POST entries, which could be books or movies.
+    // This is a temporary measure for data migration.
+    if (backendType === 'BLOG_POST') {
+        if (entry.title.includes("读《")) return 'BOOK_LOG';
+        if (entry.title.includes("《") && entry.title.includes("观后")) return 'MOVIE_LOG';
+        // Fallback to the generic blog post type for any other case
+        return 'BLOG_POST'; 
+    }
+
+    // Standard lookup for all other types. It returns the *first* match.
     return (Object.keys(ENTRY_TYPES) as FrontendEntryType[]).find(key => {
-        const entry = ENTRY_TYPES[key];
-        return entry.backendType === backendType;
+        const entryDef = ENTRY_TYPES[key];
+        return entryDef.backendType === backendType;
     });
 };
 
@@ -61,8 +69,8 @@ function EditForm({ entry }: { entry: Entry }) {
     dispatch({ type: 'UPDATE_FIELD', field, value });
   };
 
-  // Derive frontend type from entry prop
-  const frontendType = getFrontendTypeFromBackend(entry.type as BackendEntryType);
+  // Derive frontend type from entry prop using the new smarter helper
+  const frontendType = getFrontendTypeFromBackend(entry);
 
   // Populate form when data is fetched
   useEffect(() => {
@@ -71,17 +79,23 @@ function EditForm({ entry }: { entry: Entry }) {
       setIsPublic(entry.is_public === 1);
       setTags(entry.tags?.map(t => t.name) || []);
       if (entry.details) {
-        // This is a bit of a hack due to the mismatch.
-        // We'll need a more robust mapping from backend details to frontend form state.
-        const initialState = {
-            ...entry.details,
-            // Example mapping:
-            reading_notes: entry.details.full_content,
-            review: entry.details.full_content,
-            poster_image_url: entry.details.cover_image_url,
-            my_solution: entry.details.note_content,
-            note_content: entry.details.note_content,
-        };
+        const initialState = { ...entry.details };
+
+        // Backwards-compatibility mapping from old generic fields to new specific fields.
+        // This allows editing old entries without losing data. On save, the new
+        // `buildDetails` function will persist the correct new structure.
+        if (initialState.full_content) {
+            initialState.reading_notes = initialState.reading_notes || initialState.full_content;
+            initialState.review = initialState.review || initialState.full_content;
+        }
+        if (initialState.note_content) {
+            initialState.my_solution = initialState.my_solution || initialState.note_content;
+        }
+        if (initialState.cover_image_url) {
+            // For movie logs that might have used the generic cover_image_url
+            initialState.poster_image_url = initialState.poster_image_url || initialState.cover_image_url;
+        }
+        
         dispatch({ type: 'SET_ALL_FIELDS', payload: initialState });
       }
     }
@@ -135,15 +149,15 @@ function EditForm({ entry }: { entry: Entry }) {
         case 'note_content':
           return (
             <div key={field} className="space-y-2">
-              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
-              <Textarea id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required rows={8} />
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{FIELD_LABELS[field] || field.replace(/_/g, ' ')}</Label>
+              <Textarea id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} rows={8} />
             </div>
           );
         case 'cover_image_url':
         case 'poster_image_url':
             return (
                 <div key={field} className="space-y-2">
-                    <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+                    <Label htmlFor={field} className="text-lg font-medium capitalize">{FIELD_LABELS[field] || field.replace(/_/g, ' ')}</Label>
                     <ImageUploader 
                         initialImage={dynamicState[field]} 
                         onUploadSuccess={(url) => handleDynamicFieldChange(field, url)} 
@@ -153,8 +167,8 @@ function EditForm({ entry }: { entry: Entry }) {
         default:
           return (
             <div key={field} className="space-y-2">
-              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
-              <Input id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required />
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{FIELD_LABELS[field] || field.replace(/_/g, ' ')}</Label>
+              <Input id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} />
             </div>
           )
       }

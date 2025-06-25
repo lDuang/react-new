@@ -13,7 +13,7 @@ import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import "easymde/dist/easymde.min.css";
-import { ALLOWED_ENTRY_TYPES, FrontendEntryType, getEntryTypeDetails, FormField } from "@/config/entryTypes";
+import { ALLOWED_ENTRY_TYPES, FrontendEntryType, getEntryTypeDetails, FormField, FIELD_LABELS } from "@/config/entryTypes";
 import { TagInput } from '@/components/ui/TagInput';
 
 // --- UI Components ---
@@ -122,15 +122,15 @@ function CreateForm() {
         case 'note_content':
           return (
             <div key={field} className="space-y-2">
-              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
-              <Textarea id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required rows={8} />
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{FIELD_LABELS[field] || field.replace(/_/g, ' ')}</Label>
+              <Textarea id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} rows={8} />
             </div>
           );
         case 'cover_image_url':
         case 'poster_image_url':
             return (
                 <div key={field} className="space-y-2">
-                    <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+                    <Label htmlFor={field} className="text-lg font-medium capitalize">{FIELD_LABELS[field] || field.replace(/_/g, ' ')}</Label>
                     <ImageUploader onUploadSuccess={(url) => handleDynamicFieldChange(field, url)} />
                     {dynamicState[field] && <img src={dynamicState[field]} alt="预览" className="mt-4 rounded-md max-h-60" />}
                 </div>
@@ -138,8 +138,8 @@ function CreateForm() {
         default:
           return (
             <div key={field} className="space-y-2">
-              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
-              <Input id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required />
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{FIELD_LABELS[field] || field.replace(/_/g, ' ')}</Label>
+              <Input id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} />
             </div>
           )
       }
@@ -157,7 +157,7 @@ function CreateForm() {
 
       {!selectedType ? (
         <>
-          <h1 className="text-4xl font-extrabold tracking-tight mb-8 text-center">要创作点什么？</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-6 text-center">要创作点什么？</h1>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {ALLOWED_ENTRY_TYPES.map(type => (
               <TypeCard key={type} type={type} onSelect={setSelectedType} />
@@ -170,7 +170,7 @@ function CreateForm() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-4xl font-extrabold tracking-tight mb-8">
+          <h1 className="text-3xl font-bold tracking-tight mb-8">
             创作一篇新的 - {getEntryTypeDetails(selectedType).label}
           </h1>
           <form onSubmit={handleSubmit} className="space-y-8">

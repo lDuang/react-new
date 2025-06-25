@@ -1,32 +1,67 @@
-import { FrontendEntryType, BackendEntryType } from "@/config/entryTypes";
+import { BackendEntryType } from "@/config/entryTypes";
 
-export type EntryType = FrontendEntryType | BackendEntryType;
+// ======================================================================================
+// Generic API Response Wrapper
+// ======================================================================================
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+  pagination?: {
+    total_items: number;
+    total_pages: number;
+    current_page: number;
+    page_size: number;
+  };
+}
+
+// ======================================================================================
+// Core Data Structures
+// ======================================================================================
+
+export interface Tag {
+  id: string;
+  name: string;
+}
 
 export interface Entry {
   id: string;
-  user_id: string;
-  type: EntryType;
+  type: string;
   title: string;
-  created_at: number;
-  updated_at: number;
-  is_public: 0 | 1;
+  is_public: number; // assuming 1 for public, 0 for private
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  details: Record<string, any>;
+  tags: Tag[];
+  mood_content_id?: string | null;
+}
+
+// ======================================================================================
+// API Payloads for Content Creation & Update
+// ======================================================================================
+
+// Payload for creating a new content entry.
+// Based on the backend API documentation.
+export interface ContentPayload {
+  type: BackendEntryType;
+  title: string;
+  is_public: boolean;
+  details: Record<string, any>;
+  tags?: string[];
   mood_content_id?: string;
-  details?: any; // Can be different for each type
-  tags?: { id: string; name: string }[];
-  mood?: any; // Define mood type later
 }
 
-export interface Paginated<T> {
-  success: boolean;
-  data: T[];
-  // May add pagination metadata later
-  // total: number;
-  // page: number;
-  // limit: number;
+// Payload for updating an existing content entry.
+// Note: 'type' is typically not updatable. All fields are optional.
+export interface UpdateContentPayload {
+  title?: string;
+  is_public?: boolean;
+  details?: Record<string, any>;
+  tags?: string[];
+  mood_content_id?: string;
 }
-
-// Re-export for backward compatibility if needed, or just use Paginated<Entry>
-export type PaginatedEntries = Paginated<Entry>;
 
 export interface LoginCredentials {
   username?: string;
@@ -39,7 +74,7 @@ export interface User {
 }
 
 export interface ContentFormData {
-  type: EntryType;
+  type: BackendEntryType;
   title: string;
   is_public: boolean;
   details: Record<string, any>;
@@ -52,6 +87,14 @@ export type ContentUpdatePayload = Partial<Omit<ContentFormData, 'details'>> & {
   details?: Record<string, any>;
 };
 
-export interface Tag {
-  // ... existing code ...
-} 
+export interface Paginated<T> {
+  success: boolean;
+  data: T[];
+  // May add pagination metadata later
+  // total: number;
+  // page: number;
+  // limit: number;
+}
+
+// Re-export for backward compatibility if needed, or just use Paginated<Entry>
+export type PaginatedEntries = Paginated<Entry>;

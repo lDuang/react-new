@@ -1,33 +1,73 @@
-import { Book, Clapperboard, Code, Feather } from "lucide-react";
+import { Book, Clapperboard, Code, Feather, FileText } from "lucide-react";
 import React from "react";
 import { BookCard } from "@/components/cards/BookCard";
 import { MovieCard } from "@/components/cards/MovieCard";
 import { LeetcodeCard } from "@/components/cards/LeetcodeCard";
 import { DefaultCard } from "@/components/cards/DefaultCard";
 
-// 动态表单字段的类型定义
+// 动态表单字段的类型定义 (包含所有类型的所有字段)
 export type FormField = 
+  // BLOG_POST
   | 'full_content' 
-  | 'cover_image_url' 
+  // NOTE
   | 'note_content'
+  // BOOK_LOG
   | 'book_title'
   | 'author'
   | 'reading_notes'
+  | 'cover_image_url' 
+  | 'isbn'
+  // MOVIE_LOG
   | 'movie_title'
   | 'release_year'
   | 'director'
   | 'review'
   | 'poster_image_url'
+  // CODE_CHALLENGE
   | 'problem_name'
   | 'problem_link'
   | 'my_solution'
   | 'notes';
 
 // buildDetails 函数接收的状态类型
-// 它应该包含所有可能的动态字段
 export interface DetailBuilderState {
   [key: string]: any; 
 }
+
+/**
+ * Helper to construct details object, only including non-empty values.
+ * This makes handling optional fields straightforward.
+ */
+const pick = (state: DetailBuilderState, fields: Readonly<Array<FormField>>) => {
+  const result: DetailBuilderState = {};
+  for (const field of fields) {
+    // Only include the field if it has a meaningful value
+    if (state[field] !== undefined && state[field] !== null && state[field] !== '') {
+      result[field] = state[field];
+    }
+  }
+  return result;
+};
+
+// 为每个字段提供更友好的中文标签
+export const FIELD_LABELS: Record<FormField, string> = {
+    full_content: '完整内容',
+    note_content: '笔记内容',
+    book_title: '书籍名称',
+    author: '作者',
+    reading_notes: '读书笔记',
+    cover_image_url: '封面图片',
+    isbn: 'ISBN',
+    movie_title: '电影名称',
+    release_year: '上映年份',
+    director: '导演',
+    review: '观后感',
+    poster_image_url: '海报图片',
+    problem_name: '题目名称',
+    problem_link: '题目链接',
+    my_solution: '我的题解',
+    notes: '备注',
+};
 
 /**
  * 前端使用的内容类型定义
@@ -44,52 +84,44 @@ export const ENTRY_TYPES = {
   BOOK_LOG: { 
     label: "读书笔记", 
     icon: Book,
-    backendType: "BLOG_POST",
+    backendType: "BOOK_LOG",
     cardComponent: BookCard,
-    buildDetails: (state: DetailBuilderState) => ({ 
-      full_content: state.reading_notes, 
-      cover_image_url: state.cover_image_url,
-      // 以后可以扩展，从state中取出 book_title, author 等
-    }),
-    fields: ['full_content', 'cover_image_url'] as FormField[],
+    fields: ['book_title', 'author', 'reading_notes', 'cover_image_url', 'isbn'] as const,
+    buildDetails: (state: DetailBuilderState) => pick(state, ['book_title', 'author', 'reading_notes', 'cover_image_url', 'isbn']),
   },
   MOVIE_LOG: { 
     label: "观影记录", 
     icon: Clapperboard,
-    backendType: "BLOG_POST",
+    backendType: "MOVIE_LOG",
     cardComponent: MovieCard,
-    buildDetails: (state: DetailBuilderState) => ({ 
-        full_content: state.review, 
-        cover_image_url: state.poster_image_url 
-    }),
-    fields: ['review', 'poster_image_url'] as FormField[],
+    fields: ['movie_title', 'release_year', 'director', 'review', 'poster_image_url'] as const,
+    buildDetails: (state: DetailBuilderState) => pick(state, ['movie_title', 'release_year', 'director', 'review', 'poster_image_url']),
   },
   LEETCODE_SUBMISSION: { 
     label: "刷题笔记", 
     icon: Code,
-    backendType: "NOTE",
+    backendType: "CODE_CHALLENGE",
     cardComponent: LeetcodeCard,
-    buildDetails: (state: DetailBuilderState) => ({ 
-        note_content: state.my_solution 
-    }),
-    fields: ['problem_name', 'my_solution', 'notes'] as FormField[],
+    fields: ['problem_name', 'problem_link', 'my_solution', 'notes'] as const,
+    buildDetails: (state: DetailBuilderState) => pick(state, ['problem_name', 'problem_link', 'my_solution', 'notes']),
+  },
+  BLOG_POST: {
+    label: "博客文章",
+    icon: FileText,
+    backendType: "BLOG_POST",
+    cardComponent: DefaultCard,
+    fields: ['full_content', 'cover_image_url'] as const,
+    buildDetails: (state: DetailBuilderState) => pick(state, ['full_content', 'cover_image_url']),
   },
   JOURNAL: { 
     label: "日志", 
     icon: Feather,
     backendType: "NOTE",
     cardComponent: DefaultCard,
-    buildDetails: (state: DetailBuilderState) => ({ note_content: state.note_content }),
-    fields: ['note_content'] as FormField[],
+    fields: ['note_content'] as const,
+    buildDetails: (state: DetailBuilderState) => pick(state, ['note_content']),
   },
-  THOUGHT: { 
-    label: "随笔", 
-    icon: Feather,
-    backendType: "NOTE",
-    cardComponent: DefaultCard,
-    buildDetails: (state: DetailBuilderState) => ({ note_content: state.note_content }),
-    fields: ['note_content'] as FormField[],
-  },
+  // 'THOUGHT' (随笔)与'JOURNAL' (日志)功能上完全重合，因此合并为一个以减少冗余。
 } as const; // 使用 as const 来获得更严格的类型推断
 
 // 提取所有前端类型的联合类型，用于类型检查
