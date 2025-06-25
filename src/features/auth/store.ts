@@ -10,6 +10,7 @@ export type AuthCredentials = {
 
 interface AuthStoreState {
   user: User | null;
+  isLoading: boolean;
   setUser: (user: User | null) => void;
   login: (credentials: AuthCredentials) => Promise<void>;
   logout: () => Promise<void>;
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthStoreState>()(
   persist(
     (set, get) => ({
       user: null,
+      isLoading: true,
       setUser: (user) => set({ user }),
       login: async (credentials) => {
         await api.auth.login(credentials);
@@ -37,15 +39,14 @@ export const useAuthStore = create<AuthStoreState>()(
       checkSession: async () => {
         try {
           const response = await api.auth.getSession();
-          // Correctly access the user object directly from the response
           if (response && response.success && response.user) {
-            set({ user: response.user });
+            set({ user: response.user, isLoading: false });
           } else {
-            set({ user: null });
+            set({ user: null, isLoading: false });
           }
         } catch (error) {
           console.error("Session check failed, logging out.", error);
-          set({ user: null });
+          set({ user: null, isLoading: false });
         }
       },
     }),

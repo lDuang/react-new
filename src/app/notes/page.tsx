@@ -34,7 +34,7 @@ function NoteCard({ entry }: { entry: Entry }) {
 }
 
 export default function NotesPage() {
-    const { user } = useAuthStore();
+    const { user, isLoading: isAuthLoading } = useAuthStore();
     const isLoggedIn = user !== null;
     const router = useRouter();
 
@@ -42,12 +42,12 @@ export default function NotesPage() {
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!isAuthLoading && !isLoggedIn) {
             router.replace('/login');
         }
-    }, [isLoggedIn, router]);
+    }, [isAuthLoading, isLoggedIn, router]);
 
-    const { data, error, isLoading } = useSWR<Paginated<Entry>>(
+    const { data, error, isLoading: isNotesLoading } = useSWR<Paginated<Entry>>(
         isLoggedIn ? 'admin_content' : null,
         () => api.content.getAll({ limit: 50 })
     );
@@ -61,8 +61,12 @@ export default function NotesPage() {
         }
     }, [data]);
 
+    if (isAuthLoading) {
+        return <p className="text-center pt-20">正在验证身份...</p>;
+    }
+    
     if (!isLoggedIn) {
-        return <p className="text-center pt-20">跳转到登录页面...</p>;
+        return <p className="text-center pt-20">即将跳转到登录页面...</p>;
     }
     
     return (
@@ -77,7 +81,7 @@ export default function NotesPage() {
                 </Button>
             </header>
 
-            {isLoading && <p className="text-center">加载中...</p>}
+            {isNotesLoading && <p className="text-center">加载中...</p>}
             {error && <p className="text-center text-red-500">加载手记失败，请稍后再试。</p>}
             
             <div ref={constraintsRef} className="w-full overflow-hidden cursor-grab">

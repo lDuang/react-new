@@ -32,6 +32,7 @@ const apiInstance = ky.create({
     "Content-Type": "application/json",
   },
   credentials: "include", // Crucial for sending cookies on cross-origin requests
+  timeout: 10000, // 10-second timeout for all requests
   hooks: {
     beforeError: [
       async (error) => {
