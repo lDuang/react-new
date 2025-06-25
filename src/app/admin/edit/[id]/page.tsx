@@ -62,17 +62,8 @@ function EditForm({ entry }: { entry: Entry }) {
 
     let details: Record<string, any> = {};
     if (frontendType) {
-      switch (frontendType) {
-        case 'BOOK_LOG':
-        case 'JOURNAL':
-        case 'THOUGHT':
-        case 'LEETCODE_SUBMISSION':
-          details = { full_content: fullContent };
-          break;
-        case 'MOVIE_LOG':
-          details = { full_content: fullContent, cover_image_url: coverImageUrl };
-          break;
-      }
+      const { buildDetails } = ENTRY_TYPES[frontendType];
+      details = buildDetails({ fullContent, coverImageUrl });
     } else {
         // Fallback for types not in our frontend mapping
         details = { full_content: fullContent, cover_image_url: coverImageUrl };
@@ -98,7 +89,7 @@ function EditForm({ entry }: { entry: Entry }) {
   
   const renderDynamicFields = () => {
     if (!frontendType) {
-        // Render a generic editor if type is unknown
+        // Render a generic editor if type is unknown, assuming it has full content.
         return (
              <div className="space-y-2">
                 <Label htmlFor="content">内容</Label>
@@ -106,33 +97,25 @@ function EditForm({ entry }: { entry: Entry }) {
             </div>
         );
     }
-    switch(frontendType) {
-        case 'BOOK_LOG':
-        case 'JOURNAL':
-        case 'THOUGHT':
-        case 'LEETCODE_SUBMISSION':
-            return (
-                <div className="space-y-2">
-                    <Label htmlFor="content">内容</Label>
-                    <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={15} />
-                </div>
-            );
-        case 'MOVIE_LOG':
-            return (
-                <>
-                    <div className="space-y-2">
-                        <Label htmlFor="content">影评</Label>
-                        <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={10} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cover">电影海报</Label>
-                        <ImageUploader initialImage={coverImageUrl} onUploadSuccess={setCoverImageUrl} />
-                    </div>
-                </>
-            );
-        default:
-            return null;
-    }
+    
+    const { fields } = ENTRY_TYPES[frontendType];
+
+    return (
+      <>
+        {fields.includes('fullContent') && (
+           <div className="space-y-2">
+                <Label htmlFor="content">内容 (支持 Markdown)</Label>
+                <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={10} />
+            </div>
+        )}
+        {(fields as readonly string[]).includes('coverImageUrl') && (
+            <div className="space-y-2">
+                <Label htmlFor="cover">电影海报</Label>
+                <ImageUploader initialImage={coverImageUrl} onUploadSuccess={setCoverImageUrl} />
+            </div>
+        )}
+      </>
+    );
   };
 
   const typeDetails = frontendType ? ENTRY_TYPES[frontendType] : null;
@@ -194,8 +177,8 @@ export default function EditEntryPage() {
   const isLoggedIn = user !== null;
 
   const { data: response, error: fetchError, isLoading: isFetching } = useSWR(
-    id && isLoggedIn ? `content_detail_${id}` : null,
-    () => api.public.getContentDetail(id)
+    id && isLoggedIn ? `admin_content_detail_${id}` : null,
+    () => api.content.getDetail(id) // 使用后台管理接口
   );
   
   const entry = response?.data;

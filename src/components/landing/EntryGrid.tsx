@@ -9,9 +9,7 @@ import React from "react";
 
 import { api } from "@/lib/api";
 import { Entry, Paginated } from "@/types";
-import { BookCard } from "@/components/cards/BookCard";
-import { MovieCard } from "@/components/cards/MovieCard";
-import { LeetcodeCard } from "@/components/cards/LeetcodeCard";
+import { ENTRY_TYPES, FrontendEntryType } from "@/config/entryTypes";
 import { DefaultCard } from "@/components/cards/DefaultCard";
 
 const getKey = (pageIndex: number, previousPageData: Paginated<Entry> | null) => {
@@ -33,16 +31,9 @@ const getKey = (pageIndex: number, previousPageData: Paginated<Entry> | null) =>
 // };
 
 const renderCard = (entry: Entry) => {
-  switch (entry.type) {
-    case 'BOOK_LOG':
-      return <BookCard data={entry} />;
-    case 'MOVIE_LOG':
-      return <MovieCard data={entry} />;
-    case 'LEETCODE_SUBMISSION':
-      return <LeetcodeCard data={entry} />;
-    default:
-      return <DefaultCard data={entry} />;
-  }
+  const type = entry.type as FrontendEntryType;
+  const CardComponent = ENTRY_TYPES[type]?.cardComponent || DefaultCard;
+  return <CardComponent data={entry} />;
 }
 
 export function EntryGrid() {

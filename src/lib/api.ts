@@ -86,6 +86,9 @@ export const api = {
   content: {
     getAll: (params: PaginatedParams = {}) =>
       fetcher<Paginated<Entry>>('GET', `/api/admin/content?page=${params.page || 1}&limit=${params.limit || 10}`),
+    
+    getDetail: (id: string) =>
+      fetcher<{ success: true; data: Entry }>('GET', `/api/admin/content/${id}`),
 
     create: (data: ContentFormData) =>
       fetcher<Entry>('POST', '/api/admin/content', data),

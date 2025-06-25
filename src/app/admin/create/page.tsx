@@ -60,22 +60,9 @@ function CreateForm() {
     setLoading(true);
     setError("");
 
-    const { backendType } = getEntryTypeDetails(selectedType);
-
-    let details: Record<string, any> = {};
-    switch (selectedType) {
-        case 'BOOK_LOG':
-        case 'JOURNAL':
-        case 'THOUGHT':
-        case 'LEETCODE_SUBMISSION':
-            details = { full_content: fullContent };
-            break;
-        case 'MOVIE_LOG':
-            details = { full_content: fullContent, cover_image_url: coverImageUrl };
-            break;
-        default:
-            break;
-    }
+    const { backendType, buildDetails } = getEntryTypeDetails(selectedType);
+    
+    const details = buildDetails({ fullContent, coverImageUrl });
     
     const parsedTags = tags.split(",").map((tagItem: string) => tagItem.trim()).filter(Boolean);
 
@@ -106,35 +93,27 @@ function CreateForm() {
   const renderDynamicFields = () => {
     if (!selectedType) return null;
     
-    switch(selectedType) {
-        case 'BOOK_LOG':
-        case 'JOURNAL':
-        // ...
-        case 'THOUGHT':
-        case 'LEETCODE_SUBMISSION':
-            return (
+    const { fields } = getEntryTypeDetails(selectedType);
+
+    return (
+      <>
+        {fields.includes('fullContent') && (
+           <div className="space-y-2">
+                <Label htmlFor="content">内容 (支持 Markdown)</Label>
+                <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={10} />
+            </div>
+        )}
+        {(fields as readonly string[]).includes('coverImageUrl') && (
+            <>
                 <div className="space-y-2">
-                    <Label htmlFor="content" className="text-lg font-medium">内容 (支持 Markdown)</Label>
-                    <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={15} />
+                    <Label htmlFor="cover" className="text-lg font-medium">电影海报</Label>
+                    <ImageUploader onUploadSuccess={setCoverImageUrl} />
+                    {coverImageUrl && <img src={coverImageUrl} alt="海报预览" className="mt-4 rounded-md max-h-60" />}
                 </div>
-            );
-        case 'MOVIE_LOG':
-            return (
-                <>
-                    <div className="space-y-2">
-                        <Label htmlFor="content" className="text-lg font-medium">影评 (支持 Markdown)</Label>
-                        <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={10} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cover" className="text-lg font-medium">电影海报</Label>
-                        <ImageUploader onUploadSuccess={setCoverImageUrl} />
-                        {coverImageUrl && <img src={coverImageUrl} alt="海报预览" className="mt-4 rounded-md max-h-60" />}
-                    </div>
-                </>
-            );
-        default:
-            return null;
-    }
+            </>
+        )}
+      </>
+    );
   }
 
   return (
@@ -170,8 +149,7 @@ function CreateForm() {
 
               {renderDynamicFields()}
 
-              <div className="p-6 bg-card rounded-lg border space-y-6">
-                <h3 className="text-xl font-semibold">元信息</h3>
+              <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="tags">标签 (逗号分隔)</Label>
                   <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="技术, 读书笔记" />

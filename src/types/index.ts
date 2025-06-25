@@ -1,4 +1,6 @@
-export type EntryType = "BOOK_LOG" | "LEETCODE_SUBMISSION" | "PROJECT" | "THOUGHT" | "MOVIE_LOG" | "JOURNAL" | "BLOG_POST" | "NOTE" | "PHOTOGRAPH";
+import { FrontendEntryType, BackendEntryType } from "@/config/entryTypes";
+
+export type EntryType = FrontendEntryType | BackendEntryType;
 
 export interface Entry {
   id: string;
@@ -48,4 +50,8 @@ export interface ContentFormData {
 // For PUT requests, most fields are optional
 export type ContentUpdatePayload = Partial<Omit<ContentFormData, 'details'>> & {
   details?: Record<string, any>;
-}; 
+};
+
+export interface Tag {
+  // ... existing code ...
+} 
