@@ -1,50 +1,27 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAuthStore } from '@/features/auth/store';
-import { api } from '@/lib/api';
 
+/**
+ * This component is responsible for initializing the auth state when the app loads.
+ * It calls the `checkSession` action from the auth store, which handles
+ * validating the session with the backend and updating the store accordingly.
+ * It runs only once on initial mount.
+ */
 function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const { user, login } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(true);
-
+  const { checkSession } = useAuthStore();
+  
   useEffect(() => {
-    const checkSession = async () => {
-      // 如果 store 中已经有用户信息，说明已登录或刚完成登录，无需重复检查。
-      if (user) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Try to call the session validation endpoint using our new API service
-        const sessionData = await api.auth.checkSession();
-        
-        if (sessionData && sessionData.success) {
-          // If successful, update the frontend state with user info from the backend
-          login(sessionData.user); 
-        }
-      } catch (error) {
-        // 捕获到错误（比如 401），说明未登录或会话已过期，保持未登录状态。
-        // console.error('Session check failed:', error);
-      } finally {
-        // Regardless of success or failure, the initialization process is complete
-        setIsLoading(false);
-      }
-    };
-
+    // On initial load, trigger the session check.
+    // The store itself will handle the async logic and state updates.
     checkSession();
-  }, [user, login]);
+  }, [checkSession]);
 
-  // 在检查会话期间，显示一个加载界面，防止页面内容闪烁
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-background">
-        <div className="text-main">Loading Session...</div>
-      </div>
-    );
-  }
-
+  // This component doesn't render any UI itself. It's a wrapper to trigger
+  // an effect. The actual loading state can be derived from the store
+  // in other components if needed, though often it's not necessary as
+  // components will just re-render once the user state is populated.
   return <>{children}</>;
 }
 
