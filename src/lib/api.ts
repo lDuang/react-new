@@ -1,5 +1,5 @@
 import ky from "ky";
-import { AuthCredentials, AuthState } from "@/features/auth/store";
+import { AuthCredentials } from "@/features/auth/store";
 import { ApiResponse, ContentPayload, Entry, UpdateContentPayload, User } from "@/types";
 
 // ======================================================================================
