@@ -31,8 +31,8 @@ export interface Entry {
   title: string;
   is_public: number; // assuming 1 for public, 0 for private
   user_id: string;
-  created_at: string;
-  updated_at: string;
+  created_at: number;
+  updated_at: number;
   details: Record<string, any>;
   tags: Tag[];
   mood_content_id?: string | null;
