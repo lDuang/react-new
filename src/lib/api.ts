@@ -68,8 +68,13 @@ export const api = {
    * Content management endpoints.
    */
   content: {
-    getAll: (): Promise<ApiResponse<Entry[]>> => {
-      return apiInstance.get("content").json();
+    getAll: (params: PaginatedParams = {}): Promise<ApiResponse<Entry[]>> => {
+      const searchParams = new URLSearchParams({
+        page: String(params.page || 1),
+        limit: String(params.limit || 20), // Default limit to 20
+      });
+      // This is the admin endpoint for getting all content, including drafts.
+      return apiInstance.get(`admin/content?${searchParams}`).json();
     },
     getDetail: (id: string): Promise<ApiResponse<Entry>> => {
       // Use the admin endpoint to fetch unpublished content as well
