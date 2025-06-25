@@ -27,14 +27,17 @@ interface AuthStoreState {
 
 export const useAuthStore = create<AuthStoreState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       setUser: (user) => set({ user }),
       login: async (credentials) => {
-        const response = await api.auth.login(credentials);
-        if (response.data?.user) {
-          set({ user: response.data.user });
-        }
+        // Step 1: Call the login endpoint to set the HttpOnly cookie.
+        await api.auth.login(credentials);
+        
+        // Step 2: After successful login, immediately call checkSession
+        // to fetch user data and update the state.
+        // This creates a single, atomic login action.
+        await get().checkSession();
       },
       logout: async () => {
         try {
