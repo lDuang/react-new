@@ -37,7 +37,7 @@ export default function NotesPage() {
     const { user } = useAuthStore();
     const isLoggedIn = user !== null;
     const router = useRouter();
-    
+
     const constraintsRef = useRef<HTMLDivElement>(null);
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
 
@@ -81,16 +81,16 @@ export default function NotesPage() {
             {error && <p className="text-center text-red-500">加载手记失败，请稍后再试。</p>}
             
             <div ref={constraintsRef} className="w-full overflow-hidden cursor-grab">
-                {data && data.success && (
+            {data && data.success && (
                     <motion.div 
                         className="flex gap-6"
                         drag="x"
                         dragConstraints={dragConstraints}
                         whileTap={{ cursor: "grabbing" }}
                     >
-                        {data.data.map((entry: Entry) => (
-                            <NoteCard key={entry.id} entry={entry} />
-                        ))}
+                    {data.data.map((entry: Entry) => (
+                        <NoteCard key={entry.id} entry={entry} />
+                    ))}
                     </motion.div>
                 )}
             </div>

@@ -18,7 +18,7 @@ interface MovieCardProps {
 export const MovieCard: React.FC<MovieCardProps> = ({ data }) => {
   const director = data.details?.director;
   const content = data.details?.content || data.details?.review;
-  
+
   return (
     <article className="space-y-3">
       <div className="flex items-center space-x-2 text-sub">

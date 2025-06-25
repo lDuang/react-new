@@ -62,6 +62,9 @@ export const api = {
     getSession: (): Promise<ApiResponse<AuthState>> => {
       return apiInstance.get("admin/auth/session").json();
     },
+    logout: (): Promise<ApiResponse<null>> => {
+      return apiInstance.post("admin/auth/logout").json();
+    }
   },
 
   /**

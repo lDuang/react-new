@@ -36,10 +36,17 @@ export const useAuthStore = create<AuthStoreState>()(
           set({ user: response.data.user });
         }
       },
-      logout: () => {
-        set({ user: null });
-        // Optionally, we can also call a backend logout endpoint here
-        // if it exists, to invalidate the session/cookie on the server.
+      logout: async () => {
+        try {
+          // Attempt to invalidate the session on the backend.
+          await api.auth.logout();
+        } catch (error) {
+          // Log the error but don't block the client-side logout.
+          console.error("Backend logout failed, proceeding with client-side cleanup.", error);
+        } finally {
+          // Always clear the user from the state.
+          set({ user: null });
+        }
       },
       checkSession: async () => {
         try {

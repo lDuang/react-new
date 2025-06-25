@@ -20,18 +20,10 @@ export function Header() {
   }, []);
 
   const handleLogout = async () => {
-    try {
-      // Call the new API service for logout
-      // This will clear the HttpOnly cookie on the backend
-      await api.auth.logout();
-    } catch (error) {
-      // Even if the backend call fails, proceed with client-side logout
-      console.error("Logout API call failed, but proceeding with client-side logout:", error);
-    } finally {
-      // Always perform client-side state update and redirection
-      logout();
-      router.push('/');
-    }
+    // The logout logic is now fully encapsulated in the zustand store.
+    // This makes the component cleaner and the logic centralized.
+    await logout();
+    router.push('/');
   };
 
   if (!hasMounted) {
