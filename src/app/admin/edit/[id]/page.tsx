@@ -9,17 +9,23 @@ import { useAuthStore } from "@/features/auth/store";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import useSWR from 'swr';
-import { ArrowLeft, Book, Clapperboard, Code, Feather } from "lucide-react";
-import { api } from "@/lib/api"; // Use the new API service
+import { ArrowLeft } from "lucide-react";
+import { api } from "@/lib/api";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { Entry } from "@/types";
+import { ENTRY_TYPES, FrontendEntryType, BackendEntryType } from "@/config/entryTypes";
 
-const entryTypeMap: Record<string, { label: string; icon: React.ElementType }> = {
-  BOOK_LOG: { label: "读书笔记", icon: Book },
-  MOVIE_LOG: { label: "观影记录", icon: Clapperboard },
-  LEETCODE_SUBMISSION: { label: "刷题笔记", icon: Code },
-  JOURNAL: { label: "记录", icon: Feather },
-  THOUGHT: { label: "随笔", icon: Feather },
+// Helper function to find the frontend type based on the backend type
+// This is necessary because the API returns 'BLOG_POST' or 'NOTE', and we need to map it back
+// to a more specific frontend type like 'BOOK_LOG' or 'MOVIE_LOG'.
+// This logic assumes a simple mapping. If it gets complex, it should be refined.
+const getFrontendTypeFromBackend = (backendType: BackendEntryType): FrontendEntryType | undefined => {
+    // This is a simple reverse lookup. 
+    // It will return the *first* match. If backend types are not unique, this may need adjustment.
+    return (Object.keys(ENTRY_TYPES) as FrontendEntryType[]).find(key => {
+        const entry = ENTRY_TYPES[key];
+        return entry.backendType === backendType;
+    });
 };
 
 function EditForm({ entry }: { entry: Entry }) {
@@ -32,6 +38,9 @@ function EditForm({ entry }: { entry: Entry }) {
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Derive frontend type from entry prop
+  const frontendType = getFrontendTypeFromBackend(entry.type as BackendEntryType);
 
   // Populate form when data is fetched
   useEffect(() => {
@@ -52,17 +61,21 @@ function EditForm({ entry }: { entry: Entry }) {
     setError("");
 
     let details: Record<string, any> = {};
-    if (entry) {
-      switch (entry.type) {
+    if (frontendType) {
+      switch (frontendType) {
         case 'BOOK_LOG':
         case 'JOURNAL':
         case 'THOUGHT':
+        case 'LEETCODE_SUBMISSION':
           details = { full_content: fullContent };
           break;
         case 'MOVIE_LOG':
           details = { full_content: fullContent, cover_image_url: coverImageUrl };
           break;
       }
+    } else {
+        // Fallback for types not in our frontend mapping
+        details = { full_content: fullContent, cover_image_url: coverImageUrl };
     }
 
     const parsedTags = tags.split(",").map(tag => tag.trim()).filter(Boolean);
@@ -84,11 +97,20 @@ function EditForm({ entry }: { entry: Entry }) {
   };
   
   const renderDynamicFields = () => {
-    if (!entry) return null;
-    switch(entry.type) {
+    if (!frontendType) {
+        // Render a generic editor if type is unknown
+        return (
+             <div className="space-y-2">
+                <Label htmlFor="content">内容</Label>
+                <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={15} />
+            </div>
+        );
+    }
+    switch(frontendType) {
         case 'BOOK_LOG':
         case 'JOURNAL':
         case 'THOUGHT':
+        case 'LEETCODE_SUBMISSION':
             return (
                 <div className="space-y-2">
                     <Label htmlFor="content">内容</Label>
@@ -113,6 +135,9 @@ function EditForm({ entry }: { entry: Entry }) {
     }
   };
 
+  const typeDetails = frontendType ? ENTRY_TYPES[frontendType] : null;
+  const Icon = typeDetails?.icon;
+
   return (
     <div className="container mx-auto max-w-3xl py-12">
       <Button variant="ghost" onClick={() => router.back()} className="mb-8">
@@ -124,7 +149,10 @@ function EditForm({ entry }: { entry: Entry }) {
       <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-2">
               <Label htmlFor="type" className="text-lg font-medium">内容类型</Label>
-              <Input id="type" value={entryTypeMap[entry.type]?.label || entry.type} readOnly className="bg-muted"/>
+              <div className="flex items-center p-3 rounded-md bg-muted text-lg">
+                {Icon && <Icon className="mr-2 h-5 w-5" />}
+                <span>{typeDetails?.label || entry.type}</span>
+              </div>
           </div>
 
           <div className="space-y-2">
@@ -185,4 +213,4 @@ export default function EditEntryPage() {
       <EditForm entry={entry} />
     </div>
   );
-} 
+}
