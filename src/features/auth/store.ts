@@ -1,27 +1,18 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { api } from '@/lib/api';
-
-export interface User {
-  id: string;
-  username: string;
-  avatar?: string;
-}
+import { User } from '@/types'; // Import the single source of truth
 
 export type AuthCredentials = {
   username?: string;
   password?: string;
 };
 
-export type AuthState = {
-  user: User | null;
-}
-
 interface AuthStoreState {
   user: User | null;
   setUser: (user: User | null) => void;
   login: (credentials: AuthCredentials) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   checkSession: () => Promise<void>;
 }
 
@@ -31,31 +22,24 @@ export const useAuthStore = create<AuthStoreState>()(
       user: null,
       setUser: (user) => set({ user }),
       login: async (credentials) => {
-        // Step 1: Call the login endpoint to set the HttpOnly cookie.
         await api.auth.login(credentials);
-        
-        // Step 2: After successful login, immediately call checkSession
-        // to fetch user data and update the state.
-        // This creates a single, atomic login action.
         await get().checkSession();
       },
       logout: async () => {
         try {
-          // Attempt to invalidate the session on the backend.
           await api.auth.logout();
         } catch (error) {
-          // Log the error but don't block the client-side logout.
           console.error("Backend logout failed, proceeding with client-side cleanup.", error);
         } finally {
-          // Always clear the user from the state.
           set({ user: null });
         }
       },
       checkSession: async () => {
         try {
           const response = await api.auth.getSession();
-          if (response.data?.user) {
-            set({ user: response.data.user });
+          // Correctly access the user object directly from the response
+          if (response && response.success && response.user) {
+            set({ user: response.user });
           } else {
             set({ user: null });
           }
@@ -66,8 +50,8 @@ export const useAuthStore = create<AuthStoreState>()(
       },
     }),
     {
-      name: 'auth-storage', // name of the item in the storage (must be unique)
-      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 ); 

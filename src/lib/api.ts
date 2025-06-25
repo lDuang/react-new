@@ -1,6 +1,6 @@
 import ky from "ky";
 import { AuthCredentials, AuthState } from "@/features/auth/store";
-import { ApiResponse, ContentPayload, Entry, UpdateContentPayload } from "@/types";
+import { ApiResponse, ContentPayload, Entry, UpdateContentPayload, User } from "@/types";
 
 // ======================================================================================
 // Constants & Core Fetcher
@@ -9,6 +9,12 @@ import { ApiResponse, ContentPayload, Entry, UpdateContentPayload } from "@/type
 // --- Type Definitions for API Service ---
 interface GetUploadUrlResponse {
   uploadURL: string;
+}
+
+// A specific response type for the session endpoint, which doesn't use the standard `data` wrapper.
+export interface SessionApiResponse {
+  success: boolean;
+  user: User;
 }
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
@@ -56,10 +62,10 @@ export const api = {
    * Authentication-related endpoints.
    */
   auth: {
-    login: (credentials: AuthCredentials): Promise<ApiResponse<AuthState>> => {
+    login: (credentials: AuthCredentials): Promise<ApiResponse<{ success: boolean; message: string }>> => {
       return apiInstance.post("api/auth/login", { json: credentials }).json();
     },
-    getSession: (): Promise<ApiResponse<AuthState>> => {
+    getSession: (): Promise<SessionApiResponse> => {
       return apiInstance.get("api/admin/auth/session").json();
     },
     logout: (): Promise<ApiResponse<null>> => {
