@@ -8,8 +8,8 @@ import AuthInitializer from "@/features/auth/components/AuthInitializer";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "技点迷津 - 交互式首页",
-  description: "一个用代码和文字耕耘思想的数字花园。",
+  title: "技点迷津 - 一个大学生的成长之路 (CoderPath)",
+  description: "欢迎来到技点迷津的个人博客。这里是 CoderPath，用代码与文字记录学习、思考与实践",
 };
 
 export default function RootLayout({

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/features/auth/store';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useRouter } from "next/navigation";
-import { fetcher, API_BASE_URL } from '@/lib/api';
+import { api } from '@/lib/api';
 
 export function Header() {
   const { user, logout } = useAuthStore();
@@ -20,15 +20,18 @@ export function Header() {
   }, []);
 
   const handleLogout = async () => {
-    logout(); // 立即更新UI
     try {
-      // 调用登出接口，清除后端的 HttpOnly cookie
-      await fetcher(`${API_BASE_URL}/api/auth/logout`, { method: 'POST' });
+      // Call the new API service for logout
+      // This will clear the HttpOnly cookie on the backend
+      await api.auth.logout();
     } catch (error) {
-      // 即使后端调用失败（比如因为cookie已过期导致401），我们依然执行前端的登出流程
+      // Even if the backend call fails, proceed with client-side logout
       console.error("Logout API call failed, but proceeding with client-side logout:", error);
+    } finally {
+      // Always perform client-side state update and redirection
+      logout();
+      router.push('/');
     }
-    router.push('/'); // 重定向到首页
   };
 
   if (!hasMounted) {
@@ -40,9 +43,11 @@ export function Header() {
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Left: Title */}
         <div className="flex-1">
-          <Link href="/" className="flex items-center space-x-2 text-xl font-bold tracking-wider text-main">
-            <Image src="/logo.ico" alt="技点迷津 Logo" width={28} height={28} className="rounded-md" />
-            <span>技点迷津</span>
+          <Link href="/" className="flex items-center space-x-3">
+            <Image src="/logo.ico" alt="Logo" width={32} height={32} className="rounded-lg" />
+            <div>
+              <div className="text-base font-bold text-main tracking-wide">技点迷津</div>
+            </div>
           </Link>
         </div>
         {/* Center: Nav */}

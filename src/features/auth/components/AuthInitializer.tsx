@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/features/auth/store';
-import { fetcher } from '@/lib/api';
-import { API_BASE_URL } from '@/lib/api';
+import { api } from '@/lib/api';
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { user, login } = useAuthStore();
@@ -18,18 +17,18 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        // 尝试调用会话验证接口
-        const sessionData = await fetcher<any>(`${API_BASE_URL}/api/admin/auth/session`);
+        // Try to call the session validation endpoint using our new API service
+        const sessionData = await api.auth.checkSession();
         
         if (sessionData && sessionData.success) {
-          // 如果成功，用后端返回的用户信息更新前端状态
+          // If successful, update the frontend state with user info from the backend
           login(sessionData.user); 
         }
       } catch (error) {
         // 捕获到错误（比如 401），说明未登录或会话已过期，保持未登录状态。
         // console.error('Session check failed:', error);
       } finally {
-        // 无论成功与否，初始化过程都结束了
+        // Regardless of success or failure, the initialization process is complete
         setIsLoading(false);
       }
     };

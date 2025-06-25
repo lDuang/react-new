@@ -1,6 +1,7 @@
 // path: src/components/cards/BookCard.tsx
 import React from 'react';
 import { BookOpenText } from 'lucide-react';
+import { Entry } from '@/types';
 
 // interface BookLogMeta { // BookLogMeta 不再被使用，已移除
 //   author?: string;
@@ -21,10 +22,13 @@ export interface BookCardData {
 }
 
 interface BookCardProps {
-  data: BookCardData;
+  data: Entry;
 }
 
 export const BookCard: React.FC<BookCardProps> = ({ data }) => {
+  const author = data.details?.author;
+  const content = data.details?.content || data.details?.review;
+
   // metaData 不再被使用，已移除其计算逻辑
   // const metaData: BookLogMeta = React.useMemo(() => {
   //   try {
@@ -46,7 +50,8 @@ export const BookCard: React.FC<BookCardProps> = ({ data }) => {
         <h3 className="text-lg font-bold text-main truncate">{data.title}</h3>
       </div>
       
-      {data.content && <p className="text-sub line-clamp-3">{data.content}</p>}
+      {author && <p className="text-sm text-sub font-medium">by {author}</p>}
+      {content && <p className="text-sub line-clamp-3">{content}</p>}
 
       <div className="text-xs text-sub/80">
         创建于: {new Date(data.created_at * 1000).toLocaleDateString()}

@@ -1,54 +1,143 @@
-// path: src/lib/api.ts
 import { useAuthStore } from '@/features/auth/store';
-import { PaginatedEntries } from '../types';
+import { LoginCredentials, Entry, Paginated, ContentFormData, ContentUpdatePayload, User } from '@/types';
 
-// 优先使用服务器端环境变量，如果不存在（例如在浏览器中），则回退到 NEXT_PUBLIC_ 变量
-// 这样在服务器端渲染和 API 路由中会使用更安全的服务器端变量
+// ======================================================================================
+// Constants & Core Fetcher
+// ======================================================================================
+
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+export const IMAGE_UPLOAD_URL = process.env.NEXT_PUBLIC_IMAGE_UPLOAD_URL || '';
 
-export async function fetcher<JSON>(url: string, options: RequestInit = {}): Promise<JSON> {
+/**
+ * A generic fetcher function for making API requests.
+ * - Automatically includes credentials for protected routes.
+ * - Handles 401 Unauthorized errors by logging the user out.
+ * - Throws a detailed error for non-ok responses.
+ */
+export async function fetcher<JSON = any>(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  path: string,
+  body?: Record<string, any>
+): Promise<JSON> {
   const { logout } = useAuthStore.getState();
-  const urlPath = new URL(url).pathname;
+  const url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
 
-  // 仅对 admin 和 auth 路由启用凭据
-  const isProtectedRoute = urlPath.startsWith('/api/admin') || urlPath.startsWith('/api/auth');
+  const isProtectedRoute = path.startsWith('/api/admin') || path.startsWith('/api/auth');
 
-  const fetchOptions = {
-    ...options,
-    ...(isProtectedRoute && { credentials: 'include' as const })
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...(isProtectedRoute && { credentials: 'include' as const }),
   };
 
-  const res = await fetch(url, fetchOptions);
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(url, options);
 
   if (!res.ok) {
-    // 仅对受保护的路由进行 401 拦截
     if (res.status === 401 && isProtectedRoute) {
       logout();
-      if (typeof window !== 'undefined') {
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
     }
 
-    const customError = new Error('An error occurred while fetching the data.') as Error & {
-      info: Record<string, unknown>,
-      status: number
-    };
+    const error = new Error('API request failed.') as Error & { info: any; status: number };
     try {
-      customError.info = await res.json();
-    } catch { // 将 catch 块的参数改为 _e
-      // 这里的 _e 是捕获到的错误，我们不直接使用它来设置 customError.info
-      // 使用 _e 告诉 ESLint 这是有意未使用的变量
-      customError.info = { message: await res.text() };
+      error.info = await res.json();
+    } catch {
+      error.info = { message: await res.text() };
     }
-    customError.status = res.status;
-    throw customError; // 抛出我们自定义的错误对象
+    error.status = res.status;
+    throw error;
   }
 
-  return res.json();
+  if (res.headers.get('Content-Type')?.includes('application/json')) {
+    return res.json();
+  }
+  // Handle cases like logout which might return no content
+  return {} as JSON;
 }
 
-export const getPublicEntries = (page = 1, limit = 5): Promise<PaginatedEntries> => {
-  return fetcher(`${API_BASE_URL}/api/entries/public?page=${page}&limit=${limit}`);
-}
+// ======================================================================================
+// API Service
+// ======================================================================================
+
+type PaginatedParams = { page?: number; limit?: number };
+
+export const api = {
+  // --- Authentication ---
+  auth: {
+    login: (credentials: LoginCredentials) =>
+      fetcher<{ success: true; message: string }>('POST', '/api/auth/login', credentials),
+
+    logout: () => 
+      fetcher('POST', '/api/auth/logout'),
+
+    checkSession: () => 
+      fetcher<{ success: true; user: User }>('GET', '/api/admin/auth/session'),
+  },
+
+  // --- Admin Content Management ---
+  content: {
+    getAll: (params: PaginatedParams = {}) =>
+      fetcher<Paginated<Entry>>('GET', `/api/admin/content?page=${params.page || 1}&limit=${params.limit || 10}`),
+
+    create: (data: ContentFormData) =>
+      fetcher<Entry>('POST', '/api/admin/content', data),
+
+    update: (id: string, payload: ContentUpdatePayload) =>
+      fetcher<{ success: true; message: string }>('PUT', `/api/admin/content/${id}`, payload),
+
+    delete: (id: string) =>
+      fetcher<{ success: true; message: string }>('DELETE', `/api/admin/content/${id}`),
+  },
+
+  // --- Public API ---
+  public: {
+    getContent: (params: PaginatedParams = {}) =>
+      fetcher<Paginated<Entry>>('GET', `/api/content/public?page=${params.page || 1}&limit=${params.limit || 10}`),
+      
+    getContentDetail: (id: string) =>
+      fetcher<{ success: true; data: Entry }>('GET', `/api/content/${id}`),
+  },
+  
+  // --- Moods ---
+  moods: {
+    get: (params: PaginatedParams = {}) =>
+      fetcher<Paginated<any>>('GET', `/api/admin/moods?page=${params.page || 1}&limit=${params.limit || 10}`), // Define Mood type later
+
+    getLinkedContent: (moodId: string) =>
+      fetcher<Paginated<Entry>>('GET', `/api/admin/moods/${moodId}/linked-content`),
+  },
+
+  // --- Image Upload ---
+  uploadImage: async (imageFile: File): Promise<{ success: boolean; id: string; url: string }> => {
+    if (!IMAGE_UPLOAD_URL) {
+      throw new Error("Image upload URL is not configured. Please set NEXT_PUBLIC_IMAGE_UPLOAD_URL.");
+    }
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    const res = await fetch(IMAGE_UPLOAD_URL, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      const error = new Error('Image upload failed.') as Error & { info: any; status: number };
+      try {
+        error.info = await res.json();
+      } catch {
+        error.info = { message: await res.text() };
+      }
+      error.status = res.status;
+      throw error;
+    }
+    return res.json();
+  }
+}; 

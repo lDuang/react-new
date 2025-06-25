@@ -4,8 +4,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/features/auth/store';
-import { API_BASE_URL, fetcher } from '@/lib/api';
-// 移除了未使用的 Button 和 Input 导入
+import { api } from '@/lib/api'; // Use our new API service
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -21,27 +20,23 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // 第一步：调用登录接口，后端会设置 httpOnly cookie
-      await fetcher(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      // Step 1: Call the login endpoint. The backend sets the HttpOnly cookie.
+      await api.auth.login({ username, password });
 
-      // 第二步：登录成功后，立即调用会话接口获取用户信息
-      const sessionData = await fetcher<any>(`${API_BASE_URL}/api/admin/auth/session`);
+      // Step 2: After successful login, immediately fetch session data to get user info.
+      const sessionData = await api.auth.checkSession();
 
       if (!sessionData || !sessionData.success) {
         throw new Error("登录成功，但无法获取会话信息。");
       }
 
-      // 第三步：用获取到的用户信息更新前端状态
+      // Step 3: Update frontend state with the fetched user info.
       login(sessionData.user);
-      router.push('/'); // 登录成功后跳转到首页
+      router.push('/notes'); // Redirect to the notes page after login
 
     } catch (err) {
       const error = err as Error & { info?: { error?: string } };
-      setError(error?.info?.error || 'Login failed');
+      setError(error?.info?.error || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +75,6 @@ export default function LoginPage() {
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <div>
-            {/* 使用普通的 button 标签替代导入的 Button 组件 */}
             <button
               type="submit"
               disabled={isLoading}

@@ -1,17 +1,51 @@
-export type EntryType = "BOOK_LOG" | "LEETCODE_SUBMISSION" | "PROJECT" | "THOUGHT" | "MOVIE_LOG" | "JOURNAL";
+export type EntryType = "BOOK_LOG" | "LEETCODE_SUBMISSION" | "PROJECT" | "THOUGHT" | "MOVIE_LOG" | "JOURNAL" | "BLOG_POST" | "NOTE" | "PHOTOGRAPH";
 
 export interface Entry {
   id: string;
+  user_id: string;
   type: EntryType;
   title: string;
-  content?: string; // Content is in the detailed view
   created_at: number;
+  updated_at: number;
   is_public: 0 | 1;
-  mood?: string;
-  meta?: string; // API returns meta as a JSON string
+  mood_content_id?: string;
+  details?: any; // Can be different for each type
+  tags?: { id: string; name: string }[];
+  mood?: any; // Define mood type later
 }
 
-export interface PaginatedEntries {
+export interface Paginated<T> {
   success: boolean;
-  data: Entry[];
-} 
+  data: T[];
+  // May add pagination metadata later
+  // total: number;
+  // page: number;
+  // limit: number;
+}
+
+// Re-export for backward compatibility if needed, or just use Paginated<Entry>
+export type PaginatedEntries = Paginated<Entry>;
+
+export interface LoginCredentials {
+  username?: string;
+  password?: string;
+}
+
+export interface User {
+  id: string;
+  role: 'admin' | 'user';
+}
+
+export interface ContentFormData {
+  type: EntryType;
+  title: string;
+  is_public: boolean;
+  details: Record<string, any>;
+  tags?: string[];
+  mood_content_id?: string;
+}
+
+// For PUT requests, most fields are optional
+export type ContentUpdatePayload = Partial<Omit<ContentFormData, 'details'>> & {
+  details?: Record<string, any>;
+}; 

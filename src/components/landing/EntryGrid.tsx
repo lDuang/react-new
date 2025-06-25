@@ -7,16 +7,16 @@ import { motion/*, Variants*/ } from "framer-motion";
 import Link from "next/link";
 import React from "react";
 
-import { API_BASE_URL, fetcher } from "@/lib/api";
-import { Entry, PaginatedEntries } from "@/types";
-import { BookCard, BookCardData } from "@/components/cards/BookCard";
-import { MovieCard, MovieCardData } from "@/components/cards/MovieCard";
-import { LeetcodeCard, LeetcodeCardData } from "@/components/cards/LeetcodeCard";
-import { DefaultCard, DefaultCardData } from "@/components/cards/DefaultCard";
+import { api } from "@/lib/api";
+import { Entry, Paginated } from "@/types";
+import { BookCard } from "@/components/cards/BookCard";
+import { MovieCard } from "@/components/cards/MovieCard";
+import { LeetcodeCard } from "@/components/cards/LeetcodeCard";
+import { DefaultCard } from "@/components/cards/DefaultCard";
 
-const getKey = (pageIndex: number, previousPageData: PaginatedEntries | null) => {
+const getKey = (pageIndex: number, previousPageData: Paginated<Entry> | null) => {
   if (previousPageData && !previousPageData.data.length) return null;
-  return `${API_BASE_URL}/api/entries/public?page=${pageIndex + 1}&limit=8`;
+  return `public/content?page=${pageIndex + 1}`;
 };
 
 // const cardVariants: Variants = {
@@ -35,21 +35,23 @@ const getKey = (pageIndex: number, previousPageData: PaginatedEntries | null) =>
 const renderCard = (entry: Entry) => {
   switch (entry.type) {
     case 'BOOK_LOG':
-      return <BookCard data={entry as BookCardData} />;
+      return <BookCard data={entry} />;
     case 'MOVIE_LOG':
-      return <MovieCard data={entry as MovieCardData} />;
+      return <MovieCard data={entry} />;
     case 'LEETCODE_SUBMISSION':
-      return <LeetcodeCard data={entry as LeetcodeCardData} />;
-    case 'JOURNAL':
+      return <LeetcodeCard data={entry} />;
     default:
-      return <DefaultCard data={entry as DefaultCardData} />;
+      return <DefaultCard data={entry} />;
   }
 }
 
 export function EntryGrid() {
-  const { data, error, size, setSize, isLoading } = useSWRInfinite<PaginatedEntries>(
+  const { data, error, size, setSize, isLoading } = useSWRInfinite<Paginated<Entry>>(
     getKey, 
-    fetcher,
+    (key: string) => {
+      const page = parseInt(key.split('=')[1], 10);
+      return api.public.getContent({ page, limit: 8 });
+    },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,

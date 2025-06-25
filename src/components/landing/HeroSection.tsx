@@ -54,7 +54,7 @@ export default function HeroSection() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-xl md:text-2xl text-sub"
         >
-          一个用代码与文字耕耘思想的数字花园。
+          欢迎来到技点迷津的个人博客。<br/>这里是 CoderPath，用代码与文字记录学习、思考与实践
         </motion.p>
 
         <motion.div
