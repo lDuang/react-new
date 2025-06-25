@@ -4,14 +4,13 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/features/auth/store';
-import { api } from '@/lib/api'; // Use our new API service
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const login = useAuthStore((state) => state.login);
+  const { login } = useAuthStore(); // We only need the login action from the store
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,18 +19,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Step 1: Call the login endpoint. The backend sets the HttpOnly cookie.
-      await api.auth.login({ username, password });
-
-      // Step 2: After successful login, immediately fetch session data to get user info.
-      const sessionData = await api.auth.checkSession();
-
-      if (!sessionData || !sessionData.success) {
-        throw new Error("登录成功，但无法获取会话信息。");
-      }
-
-      // Step 3: Update frontend state with the fetched user info.
-      login(sessionData.user);
+      // The login action in the store now handles both the API call
+      // and updating the state. This simplifies the component logic.
+      await login({ username, password });
+      
       router.push('/notes'); // Redirect to the notes page after login
 
     } catch (err) {
