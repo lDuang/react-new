@@ -7,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/features/auth/store";
 import { useRouter, useParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import useSWR from 'swr';
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { Entry } from "@/types";
-import { ENTRY_TYPES, FrontendEntryType, BackendEntryType } from "@/config/entryTypes";
+import { ENTRY_TYPES, FrontendEntryType, BackendEntryType, FormField } from "@/config/entryTypes";
+import { TagInput } from '@/components/ui/TagInput';
 
 // Helper function to find the frontend type based on the backend type
 // This is necessary because the API returns 'BLOG_POST' or 'NOTE', and we need to map it back
@@ -28,16 +29,37 @@ const getFrontendTypeFromBackend = (backendType: BackendEntryType): FrontendEntr
     });
 };
 
+// Reducer for dynamic form state
+function dynamicFormReducer(state: any, action: { type: 'UPDATE_FIELD' | 'SET_ALL_FIELDS', field?: string, value?: any, payload?: any }) {
+  switch (action.type) {
+    case 'UPDATE_FIELD':
+      if (!action.field) return state;
+      return {
+        ...state,
+        [action.field]: action.value,
+      };
+    case 'SET_ALL_FIELDS':
+        return action.payload || {};
+    default:
+      return state;
+  }
+}
+
 function EditForm({ entry }: { entry: Entry }) {
   const router = useRouter();
-  // --- Form States ---
+  // --- Static Form States ---
   const [title, setTitle] = useState("");
   const [isPublic, setIsPublic] = useState(true);
-  const [tags, setTags] = useState("");
-  const [fullContent, setFullContent] = useState("");
-  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // --- Dynamic detail states managed by a reducer ---
+  const [dynamicState, dispatch] = useReducer(dynamicFormReducer, {});
+  
+  const handleDynamicFieldChange = (field: FormField, value: any) => {
+    dispatch({ type: 'UPDATE_FIELD', field, value });
+  };
 
   // Derive frontend type from entry prop
   const frontendType = getFrontendTypeFromBackend(entry.type as BackendEntryType);
@@ -47,10 +69,20 @@ function EditForm({ entry }: { entry: Entry }) {
     if (entry) {
       setTitle(entry.title);
       setIsPublic(entry.is_public === 1);
-      setTags(entry.tags?.map(t => t.name).join(', ') || "");
+      setTags(entry.tags?.map(t => t.name) || []);
       if (entry.details) {
-        setFullContent(entry.details.full_content || "");
-        setCoverImageUrl(entry.details.cover_image_url || "");
+        // This is a bit of a hack due to the mismatch.
+        // We'll need a more robust mapping from backend details to frontend form state.
+        const initialState = {
+            ...entry.details,
+            // Example mapping:
+            reading_notes: entry.details.full_content,
+            review: entry.details.full_content,
+            poster_image_url: entry.details.cover_image_url,
+            my_solution: entry.details.note_content,
+            note_content: entry.details.note_content,
+        };
+        dispatch({ type: 'SET_ALL_FIELDS', payload: initialState });
       }
     }
   }, [entry]);
@@ -63,20 +95,17 @@ function EditForm({ entry }: { entry: Entry }) {
     let details: Record<string, any> = {};
     if (frontendType) {
       const { buildDetails } = ENTRY_TYPES[frontendType];
-      details = buildDetails({ fullContent, coverImageUrl });
+      details = buildDetails(dynamicState);
     } else {
-        // Fallback for types not in our frontend mapping
-        details = { full_content: fullContent, cover_image_url: coverImageUrl };
+        details = { ...dynamicState };
     }
-
-    const parsedTags = tags.split(",").map(tag => tag.trim()).filter(Boolean);
 
     try {
       await api.content.update(entry.id, {
         title,
         is_public: isPublic,
         details,
-        tags: parsedTags,
+        tags,
       });
       router.push("/notes");
     } catch (err: any) {
@@ -89,33 +118,48 @@ function EditForm({ entry }: { entry: Entry }) {
   
   const renderDynamicFields = () => {
     if (!frontendType) {
-        // Render a generic editor if type is unknown, assuming it has full content.
-        return (
-             <div className="space-y-2">
-                <Label htmlFor="content">内容</Label>
-                <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={15} />
-            </div>
-        );
+        // Render a generic editor if type is unknown
+        return null;
     }
     
     const { fields } = ENTRY_TYPES[frontendType];
-
-    return (
-      <>
-        {fields.includes('fullContent') && (
-           <div className="space-y-2">
-                <Label htmlFor="content">内容 (支持 Markdown)</Label>
-                <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={10} />
+    
+    const renderField = (field: FormField) => {
+      // Duplicating the logic from CreateForm. This could be a shared component.
+      switch(field) {
+        case 'full_content':
+        case 'reading_notes':
+        case 'review':
+        case 'my_solution':
+        case 'notes':
+        case 'note_content':
+          return (
+            <div key={field} className="space-y-2">
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+              <Textarea id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required rows={8} />
             </div>
-        )}
-        {(fields as readonly string[]).includes('coverImageUrl') && (
-            <div className="space-y-2">
-                <Label htmlFor="cover">电影海报</Label>
-                <ImageUploader initialImage={coverImageUrl} onUploadSuccess={setCoverImageUrl} />
+          );
+        case 'cover_image_url':
+        case 'poster_image_url':
+            return (
+                <div key={field} className="space-y-2">
+                    <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+                    <ImageUploader 
+                        initialImage={dynamicState[field]} 
+                        onUploadSuccess={(url) => handleDynamicFieldChange(field, url)} 
+                    />
+                </div>
+            )
+        default:
+          return (
+            <div key={field} className="space-y-2">
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+              <Input id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required />
             </div>
-        )}
-      </>
-    );
+          )
+      }
+    }
+    return fields.map(renderField);
   };
 
   const typeDetails = frontendType ? ENTRY_TYPES[frontendType] : null;
@@ -145,11 +189,14 @@ function EditForm({ entry }: { entry: Entry }) {
 
           {renderDynamicFields()}
 
-          <div className="p-6 bg-muted/50 rounded-lg space-y-6">
-            <h3 className="text-xl font-semibold">元信息</h3>
+          <div className="space-y-6 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="tags">标签 (逗号分隔)</Label>
-              <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="技术, 读书笔记" />
+              <Label htmlFor="tags">标签</Label>
+               <TagInput 
+                    value={tags} 
+                    onChange={setTags}
+                    placeholder="输入标签后按空格..."
+                />
             </div>
             <div className="flex items-center space-x-3 pt-2">
               <Checkbox id="is_public" checked={isPublic} onCheckedChange={(checked) => setIsPublic(Boolean(checked))} />

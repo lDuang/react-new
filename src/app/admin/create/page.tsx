@@ -7,13 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/features/auth/store";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/lib/api";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import "easymde/dist/easymde.min.css";
-import { ALLOWED_ENTRY_TYPES, FrontendEntryType, getEntryTypeDetails } from "@/config/entryTypes";
+import { ALLOWED_ENTRY_TYPES, FrontendEntryType, getEntryTypeDetails, FormField } from "@/config/entryTypes";
+import { TagInput } from '@/components/ui/TagInput';
 
 // --- UI Components ---
 
@@ -36,21 +37,37 @@ const TypeCard = ({ type, onSelect }: { type: FrontendEntryType; onSelect: (type
 
 // --- Main Form Logic ---
 
+// Reducer for dynamic form state
+function dynamicFormReducer(state: any, action: { type: 'UPDATE_FIELD', field: string, value: any }) {
+  switch (action.type) {
+    case 'UPDATE_FIELD':
+      return {
+        ...state,
+        [action.field]: action.value,
+      };
+    default:
+      return state;
+  }
+}
+
 function CreateForm() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<FrontendEntryType | null>(null);
   
-  // --- Core form states ---
+  // --- Static form states ---
   const [title, setTitle] = useState<string>("");
   const [isPublic, setIsPublic] = useState<boolean>(true);
-  const [tags, setTags] = useState<string>(""); 
+  const [tags, setTags] = useState<string[]>([]);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  // --- Dynamic detail states ---
-  const [fullContent, setFullContent] = useState<string>("");
-  const [coverImageUrl, setCoverImageUrl] = useState<string>("");
+  // --- Dynamic detail states managed by a reducer ---
+  const [dynamicState, dispatch] = useReducer(dynamicFormReducer, {});
 
+  const handleDynamicFieldChange = (field: FormField, value: any) => {
+    dispatch({ type: 'UPDATE_FIELD', field, value });
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedType) {
@@ -62,17 +79,16 @@ function CreateForm() {
 
     const { backendType, buildDetails } = getEntryTypeDetails(selectedType);
     
-    const details = buildDetails({ fullContent, coverImageUrl });
+    // Pass the entire dynamic state to buildDetails
+    const details = buildDetails(dynamicState);
     
-    const parsedTags = tags.split(",").map((tagItem: string) => tagItem.trim()).filter(Boolean);
-
     try {
       await api.content.create({
         type: backendType as any,
         title,
         is_public: isPublic,
         details,
-        tags: parsedTags,
+        tags,
       });
 
       router.push("/notes");
@@ -95,25 +111,41 @@ function CreateForm() {
     
     const { fields } = getEntryTypeDetails(selectedType);
 
-    return (
-      <>
-        {fields.includes('fullContent') && (
-           <div className="space-y-2">
-                <Label htmlFor="content">内容 (支持 Markdown)</Label>
-                <Textarea id="content" value={fullContent} onChange={(e) => setFullContent(e.target.value)} required rows={10} />
+    const renderField = (field: FormField) => {
+      // Basic component mapping, can be expanded
+      switch(field) {
+        case 'full_content':
+        case 'reading_notes':
+        case 'review':
+        case 'my_solution':
+        case 'notes':
+        case 'note_content':
+          return (
+            <div key={field} className="space-y-2">
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+              <Textarea id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required rows={8} />
             </div>
-        )}
-        {(fields as readonly string[]).includes('coverImageUrl') && (
-            <>
-                <div className="space-y-2">
-                    <Label htmlFor="cover" className="text-lg font-medium">电影海报</Label>
-                    <ImageUploader onUploadSuccess={setCoverImageUrl} />
-                    {coverImageUrl && <img src={coverImageUrl} alt="海报预览" className="mt-4 rounded-md max-h-60" />}
+          );
+        case 'cover_image_url':
+        case 'poster_image_url':
+            return (
+                <div key={field} className="space-y-2">
+                    <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+                    <ImageUploader onUploadSuccess={(url) => handleDynamicFieldChange(field, url)} />
+                    {dynamicState[field] && <img src={dynamicState[field]} alt="预览" className="mt-4 rounded-md max-h-60" />}
                 </div>
-            </>
-        )}
-      </>
-    );
+            )
+        default:
+          return (
+            <div key={field} className="space-y-2">
+              <Label htmlFor={field} className="text-lg font-medium capitalize">{field.replace(/_/g, ' ')}</Label>
+              <Input id={field} value={dynamicState[field] || ''} onChange={(e) => handleDynamicFieldChange(field, e.target.value)} required />
+            </div>
+          )
+      }
+    }
+
+    return fields.map(renderField);
   }
 
   return (
@@ -151,8 +183,12 @@ function CreateForm() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="tags">标签 (逗号分隔)</Label>
-                  <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="技术, 读书笔记" />
+                  <Label htmlFor="tags">标签</Label>
+                  <TagInput 
+                    value={tags} 
+                    onChange={setTags}
+                    placeholder="输入标签后按空格..."
+                  />
                 </div>
                 <div className="flex items-center space-x-3 pt-2">
                   <Checkbox id="is_public" checked={isPublic} onCheckedChange={(checked) => setIsPublic(Boolean(checked))} />
