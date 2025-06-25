@@ -9,8 +9,7 @@ import { useRouter } from "next/navigation";
 import { api } from '@/lib/api';
 
 export function Header() {
-  const { user, logout } = useAuthStore();
-  const isLoggedIn = user !== null;
+  const { user, logout, isLoading: isAuthLoading } = useAuthStore();
   const router = useRouter();
 
   // 解决 Zustand 在 Next.js App Router 中的水合问题
@@ -45,7 +44,8 @@ export function Header() {
         {/* Center: Nav */}
         <nav className="hidden md:flex flex-1 justify-center items-center space-x-8 text-sub">
             <Link href="/" className="hover:text-main transition-colors">首页</Link>
-            {isLoggedIn && (
+            {/* Show a placeholder or nothing while loading, then the real link */}
+            {!isAuthLoading && user && (
               <Link href="/notes" className="hover:text-main transition-colors">手记</Link>
             )}
             <Link href="/projects" className="hover:text-main transition-colors">项目</Link>
@@ -53,7 +53,8 @@ export function Header() {
         {/* Right: Theme Toggle & Auth */}
         <div className="flex-1 flex justify-end items-center space-x-4">
             <ThemeToggle />
-            {isLoggedIn && (
+            {/* Show a placeholder or nothing while loading, then the real button */}
+            {!isAuthLoading && user && (
               <button onClick={handleLogout} className="text-sm text-sub hover:text-main transition-colors">
                 注销
               </button>
