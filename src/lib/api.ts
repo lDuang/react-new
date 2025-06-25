@@ -21,7 +21,7 @@ export const IMAGE_UPLOAD_URL = process.env.NEXT_PUBLIC_IMAGE_UPLOAD_URL || '';
 // - It explicitly includes credentials (cookies) on all requests.
 // - It sets the expected JSON headers.
 const apiInstance = ky.create({
-  prefixUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "/api",
+  prefixUrl: process.env.NEXT_PUBLIC_API_BASE_URL, // ONLY the base URL
   headers: {
     "Content-Type": "application/json",
   },
@@ -57,13 +57,13 @@ export const api = {
    */
   auth: {
     login: (credentials: AuthCredentials): Promise<ApiResponse<AuthState>> => {
-      return apiInstance.post("admin/auth/login", { json: credentials }).json();
+      return apiInstance.post("api/auth/login", { json: credentials }).json();
     },
     getSession: (): Promise<ApiResponse<AuthState>> => {
-      return apiInstance.get("admin/auth/session").json();
+      return apiInstance.get("api/admin/auth/session").json();
     },
     logout: (): Promise<ApiResponse<null>> => {
-      return apiInstance.post("admin/auth/logout").json();
+      return apiInstance.post("api/auth/logout").json();
     }
   },
 
@@ -74,20 +74,18 @@ export const api = {
     getAll: (params: PaginatedParams = {}): Promise<ApiResponse<Entry[]>> => {
       const searchParams = new URLSearchParams({
         page: String(params.page || 1),
-        limit: String(params.limit || 20), // Default limit to 20
+        limit: String(params.limit || 20),
       });
-      // This is the admin endpoint for getting all content, including drafts.
-      return apiInstance.get(`admin/content?${searchParams}`).json();
+      return apiInstance.get(`api/admin/content?${searchParams}`).json();
     },
     getDetail: (id: string): Promise<ApiResponse<Entry>> => {
-      // Use the admin endpoint to fetch unpublished content as well
-      return apiInstance.get(`admin/content/${id}`).json();
+      return apiInstance.get(`api/admin/content/${id}`).json();
     },
     create: (payload: ContentPayload): Promise<ApiResponse<Entry>> => {
-      return apiInstance.post("admin/content", { json: payload }).json();
+      return apiInstance.post("api/admin/content", { json: payload }).json();
     },
     update: (id: string, payload: UpdateContentPayload): Promise<ApiResponse<Entry>> => {
-      return apiInstance.put(`admin/content/${id}`, { json: payload }).json();
+      return apiInstance.put(`api/admin/content/${id}`, { json: payload }).json();
     },
   },
   
@@ -96,26 +94,26 @@ export const api = {
    */
   image: {
     getUploadUrl: (filename: string, contentType: string): Promise<ApiResponse<GetUploadUrlResponse>> => {
-      return apiInstance.post('admin/images/upload-url', { json: { filename, contentType } }).json();
+      return apiInstance.post('api/admin/images/upload-url', { json: { filename, contentType } }).json();
     },
   },
 
   // --- Public API ---
   public: {
     getContent: (params: PaginatedParams = {}) =>
-      apiInstance.get(`content/public?page=${params.page || 1}&limit=${params.limit || 10}`).json<ApiResponse<Entry[]>>(),
+      apiInstance.get(`api/content/public?page=${params.page || 1}&limit=${params.limit || 10}`).json<ApiResponse<Entry[]>>(),
       
     getContentDetail: (id: string) =>
-      apiInstance.get(`content/${id}`).json<ApiResponse<Entry>>(),
+      apiInstance.get(`api/content/${id}`).json<ApiResponse<Entry>>(),
   },
   
   // --- Moods ---
   moods: {
     get: (params: PaginatedParams = {}) =>
-      apiInstance.get(`admin/moods?page=${params.page || 1}&limit=${params.limit || 10}`).json<ApiResponse<any[]>>(), // Define Mood type later
+      apiInstance.get(`api/admin/moods?page=${params.page || 1}&limit=${params.limit || 10}`).json<ApiResponse<any[]>>(),
 
     getLinkedContent: (moodId: string) =>
-      apiInstance.get(`admin/moods/${moodId}/linked-content`).json<ApiResponse<Entry[]>>(),
+      apiInstance.get(`api/admin/moods/${moodId}/linked-content`).json<ApiResponse<Entry[]>>(),
   },
 
   // --- Image Upload ---
