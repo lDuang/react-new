@@ -86,7 +86,7 @@ export const api = {
       return apiInstance.get(`api/admin/content?${searchParams}`).json();
     },
     getDetail: (id: string): Promise<ApiResponse<Entry>> => {
-      return apiInstance.get(`api/admin/content/${id}`).json();
+      return apiInstance.get(`api/content/${id}`).json();
     },
     create: (payload: ContentPayload): Promise<ApiResponse<Entry>> => {
       return apiInstance.post("api/admin/content", { json: payload }).json();
