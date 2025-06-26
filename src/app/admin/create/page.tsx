@@ -212,24 +212,28 @@ function CreateForm() {
 
 // The main page component remains simple, handling auth and mounting.
 export default function CreateEntryPage() {
-  const { user } = useAuthStore();
-  const isLoggedIn = user !== null;
+  const { user, isLoading } = useAuthStore();
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    if (isMounted && !isLoggedIn) {
+    // Redirect if auth check is complete and user is not logged in.
+    if (!isLoading && !user) {
       router.replace("/login");
     }
-  }, [isMounted, isLoggedIn, router]);
+  }, [isLoading, user, router]);
   
-  if (!isMounted || !isLoggedIn) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>加载中...</p>
+        <p>正在验证身份...</p>
       </div>
     );
+  }
+
+  // If auth check is done and user is not logged in, this part may briefly render before redirect.
+  // Returning null or a minimal loader is safer.
+  if (!user) {
+    return null;
   }
 
   return (
