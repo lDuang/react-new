@@ -21,7 +21,7 @@ export const useAuthStore = create<AuthStoreState>()(
   persist(
     (set, get) => ({
       user: null,
-      isLoading: true,
+      isLoading: false,
       setUser: (user) => set({ user }),
       login: async (credentials) => {
         await api.auth.login(credentials);
@@ -37,6 +37,7 @@ export const useAuthStore = create<AuthStoreState>()(
         }
       },
       checkSession: async () => {
+        set({ isLoading: true });
         try {
           const response = await api.auth.getSession();
           if (response && response.success && response.user) {

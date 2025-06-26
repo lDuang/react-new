@@ -9,7 +9,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState, useReducer } from "react";
 import useSWR from 'swr';
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { Entry } from "@/types";
@@ -101,6 +101,24 @@ function EditForm({ entry }: { entry: Entry }) {
     }
   }, [entry]);
   
+  const handleDelete = async () => {
+    if (!window.confirm("您确定要永久删除这篇手记吗？此操作无法撤销。")) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await api.content.delete(entry.id);
+      router.push("/notes"); // Redirect after successful deletion
+    } catch (err: any) {
+      const errorMessage = err?.info?.error || err.message || "删除失败。";
+      setError(errorMessage);
+      setLoading(false); // Only stop loading on error, success will redirect away
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -220,7 +238,11 @@ function EditForm({ entry }: { entry: Entry }) {
 
           {error && <p className="text-red-500 text-center font-semibold">{error}</p>}
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-between items-center pt-4">
+              <Button type="button" variant="destructive" onClick={handleDelete} disabled={loading}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                删除手记
+              </Button>
               <Button type="submit" disabled={loading} size="lg">
                 {loading ? "正在更新..." : "更新手记"}
               </Button>

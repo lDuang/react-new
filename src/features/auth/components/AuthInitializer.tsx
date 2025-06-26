@@ -13,15 +13,12 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { checkSession } = useAuthStore();
   
   useEffect(() => {
-    // On initial load, trigger the session check.
-    // The store itself will handle the async logic and state updates.
+    // On initial load, trigger the session check in the background.
+    // The UI is not blocked by this. The store will update when this resolves.
     checkSession();
   }, [checkSession]);
 
-  // This component doesn't render any UI itself. It's a wrapper to trigger
-  // an effect. The actual loading state can be derived from the store
-  // in other components if needed, though often it's not necessary as
-  // components will just re-render once the user state is populated.
+  // This component no longer blocks rendering. It just triggers an effect.
   return <>{children}</>;
 }
 

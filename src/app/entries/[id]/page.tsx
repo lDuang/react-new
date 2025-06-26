@@ -7,8 +7,13 @@ import { Entry } from '@/types';
 import { getEntryTypeDetails } from '@/config/entryTypes';
 import { ArrowLeft, Calendar, Tag as TagIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ReactMarkdown from 'react-markdown';
+import dynamic from 'next/dynamic';
 import remarkGfm from 'remark-gfm';
+
+// Dynamically import the ReactMarkdown component
+const MarkdownRenderer = dynamic(() => import('react-markdown'), {
+  loading: () => <p>正在加载内容...</p>,
+});
 
 function EntryDetailPage() {
   const params = useParams();
@@ -82,9 +87,11 @@ function EntryDetailPage() {
         )}
 
         {entry.details?.full_content && (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <div className="prose dark:prose-invert lg:prose-xl max-w-none">
+            <MarkdownRenderer remarkPlugins={[remarkGfm]}>
                 {entry.details.full_content}
-            </ReactMarkdown>
+            </MarkdownRenderer>
+          </div>
         )}
       </article>
     </div>

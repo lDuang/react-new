@@ -32,7 +32,7 @@ const apiInstance = ky.create({
     "Content-Type": "application/json",
   },
   credentials: "include", // Crucial for sending cookies on cross-origin requests
-  timeout: 10000, // 10-second timeout for all requests
+  timeout: 2000, // 10-second timeout for all requests
   hooks: {
     beforeError: [
       async (error) => {
@@ -93,6 +93,9 @@ export const api = {
     },
     update: (id: string, payload: UpdateContentPayload): Promise<ApiResponse<Entry>> => {
       return apiInstance.put(`api/admin/content/${id}`, { json: payload }).json();
+    },
+    delete: (id: string): Promise<ApiResponse<null>> => {
+      return apiInstance.delete(`api/admin/content/${id}`).json();
     },
   },
   
