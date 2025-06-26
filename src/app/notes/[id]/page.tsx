@@ -20,7 +20,7 @@ export default function NoteDetailPage() {
 
     const { data, error, isLoading, mutate } = useSWR(
         id && user ? `content/${id}` : null,
-        () => api.content.getById(id)
+        () => api.content.getDetail(id)
     );
 
     const handleDelete = async () => {
@@ -40,7 +40,7 @@ export default function NoteDetailPage() {
     if (error) return <p className="text-center py-20 text-red-500">加载失败：{error.message}</p>;
     if (!data || !data.success) return <p className="text-center py-20">找不到内容或内容不存在。</p>;
 
-    const { entry } = data.data;
+    const entry = data.data;
 
     return (
         <div className="container mx-auto p-4 py-12 max-w-4xl">

@@ -118,7 +118,7 @@ function EditForm({ entry }: { entry: Entry }) {
       setLoading(false); // Only stop loading on error, success will redirect away
     }
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
