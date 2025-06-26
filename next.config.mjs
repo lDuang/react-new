@@ -1,13 +1,13 @@
 // import path from "path";
-// import nextBundleAnalyzer from '@next/bundle-analyzer';
+import nextBundleAnalyzer from '@next/bundle-analyzer';
 
-// const withBundleAnalyzer = nextBundleAnalyzer({
-//   enabled: process.env.ANALYZE === 'true',
-// });
+const withBundleAnalyzer = nextBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'standalone',
+  output: 'standalone',
   allowedDevOrigins: [
     "https://coderpath.dev",
     "https://coderpath.me",
